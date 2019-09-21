@@ -2,6 +2,10 @@ from lock import GraphLock
 from controller import Controller
 from threading import Thread
 from time import sleep
+import sys
+import os
+
+controller = Controller()
 
 class Structure:
     def __init__(self,controller):
@@ -15,23 +19,30 @@ class Structure:
 class MyThread(Thread):
     def __init__(self,structure):
         super().__init__()
-        self.structure=structure
+        self.structures=structure
     
     def run(self):
-        while True:
-            structure.get()
+        while not Controller.FINISH:
+            print(controller.FINISH)
+            self.structures.get()
             sleep(5)
 
-controller = Controller()
+   
+
 
 structure = Structure(controller)
 threads = []
-for i in range(5):
+for i in range(3):
     t = MyThread(structure)
     threads.append(t)
+    
+controller.addThread(threads)
     
 for t in threads:
     t.start()
 
 
+
 controller.start()
+
+
