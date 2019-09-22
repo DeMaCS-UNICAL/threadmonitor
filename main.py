@@ -1,5 +1,4 @@
-from lock import GraphLock
-from controller import Controller
+from graphthreading import Controller,GraphLock
 from threading import Thread
 from time import sleep
 import sys
