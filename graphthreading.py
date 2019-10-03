@@ -9,23 +9,6 @@ import os
 import threading
 
 
-class GraphLock:
-    def __init__(self,controller):
-        self.lock=Lock()
-        self.controller = controller
-    
-    def acquire(self):
-        """Acquire method, take the lock and update controller interface"""
-        self.controller.addWaitThread(current_thread().getName())
-        self.lock.acquire()
-        print('Lock preso',current_thread().getName())
-        self.controller.setThreadWithLock(current_thread().getName())
-        sleep(5)
-        
-    def release(self):
-        """Release method, release the lock and update controller interface"""
-        self.lock.release()
-        self.controller.releaseThread(current_thread().getName())
 
 
 
@@ -97,10 +80,10 @@ class Controller:
         '''
         
 
-    def addThread(self,threads):
-        self.objectThreads=threads
-        for t in threads:
-            self.threads[t.getName()]=Canvas(self.frame,width=self.screen_width,height=int((30/100)*self.screen_heigth),bg='gray')
+    def addThread(self,thread):
+        self.objectThreads.append(thread)
+        
+        self.threads[thread.getName()]=Canvas(self.frame,width=self.screen_width,height=int((30/100)*self.screen_heigth),bg='gray')
         
         '''
         tcanvas = Canvas(self.frame,width=self.screen_width,height=int((30/100)*self.screen_heigth),bg='gray')
@@ -118,7 +101,7 @@ class Controller:
             canvas=self.threads[thread]
             self.backgroundObjFromWindows=canvas.create_image(0,0,image=self.background,anchor=NW,tags='back')
             self.computerObjFromWindows=canvas.create_image(int((self.screen_width/3)/2),int(((self.screen_heigth-((11/100)*self.screen_heigth))/3)/3),image=self.computerImage,anchor=NW,tags='comp')
-            canvas.create_text(60,20,text=thread, font=('Fixedsys',18,'italic'))
+            canvas.create_text(int(self.screen_width/2),20,text=thread, font=('Fixedsys',18,'italic'))
 
             canvas.pack()
         
@@ -195,4 +178,34 @@ class Controller:
     def __onclose(self):
         self.window.destroy()
         Controller.FINISH=True
+
+controller=Controller()
+class GraphLock:
+    def __init__(self):
+        self.lock=Lock()
+        self.controller = controller
+    
+    def acquire(self):
+        """Acquire method, take the lock and update controller interface"""
+        self.controller.addWaitThread(current_thread().getName())
+        self.lock.acquire()
+        self.controller.setThreadWithLock(current_thread().getName())
+        print('Lock preso',current_thread().getName())
+        sleep(5)
         
+    def release(self):
+        """Release method, release the lock and update controller interface"""
+        self.lock.release()
+        self.controller.releaseThread(current_thread().getName())
+
+class GraphThread(Thread):
+    def __init__(self):
+        print('ok init graphthread')
+        super().__init__()
+        controller.addThread(self)
+    
+    
+
+
+def startGraph():
+    controller.start()
