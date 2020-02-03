@@ -1,12 +1,12 @@
 import graphthreading
-from graphthreading import Controller,GraphLock
+from graphthreading import Controller,GraphLock,GraphThread
 from threading import Thread
 from time import sleep
 import sys
 import os
 
 
-
+'''
 class Structure:
     def __init__(self):
         self.lock = GraphLock()
@@ -23,7 +23,7 @@ class MyThread(graphthreading.GraphThread):
         
     
     def run(self):
-        while not Controller.FINISH:
+        while True:
             self.structures.get()
             sleep(5)
 
@@ -32,10 +32,11 @@ class MyThread(graphthreading.GraphThread):
 
 structure = Structure()
 threads = []
-for i in range(3):
+
+for i in range(4):
     t = MyThread(structure)
     threads.append(t)
-    
+
     
     
 
@@ -43,8 +44,51 @@ for i in range(3):
 for t in threads:
     t.start()
 
+'''
+
+class MyThread(GraphThread):
+    def __init__(self,lock1,lock2,lock3,lock4):
+        super().__init__()
+        self.lock1=lock1
+        self.lock2=lock2
+        self.lock3 = lock3
+        self.lock4 = lock4
+
+       
+    
+    def run(self):
+        self.lock1.acquire()
+        sleep(2)
+        self.lock1.release()
+        self.lock2.acquire()
+        sleep(12)
+        self.lock2.release()
+        self.lock3.acquire()
+        sleep(12)
+        self.lock3.release()
+        self.lock4.acquire()
+        sleep(12)
+        self.lock4.release()
+
+lock1=GraphLock()
+lock2=GraphLock()
+lock3=GraphLock()
+lock4=GraphLock()
+mt = MyThread(lock1,lock2,lock3,lock4)
+m2 = MyThread(lock1,lock2,lock3,lock4)
+m3 = MyThread(lock1,lock2,lock3,lock4)
+m4 = MyThread(lock1,lock2,lock3,lock4)
+m5 = MyThread(lock1,lock2,lock3,lock4)
 
 
+mt.start()
+m2.start()
+m3.start()
+m4.start()
+m5.start()
 graphthreading.startGraph()
+
+
+
 
 
