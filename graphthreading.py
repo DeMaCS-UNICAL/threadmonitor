@@ -52,11 +52,12 @@ class _InactiveContainer:
 
 
 class _WaitContainer:
-    def __init__(self,wait_container):
+    def __init__(self,wait_container,image):
         self.container = wait_container
         self.lock = Lock()
         self.waitThreads = []
         self.currentHeight = 0
+        self.image = image
     
     def addThreadInWait(self,thread_name,lock):
         with self.lock:
@@ -71,6 +72,7 @@ class _WaitContainer:
             print(self.waitThreads)
             for thread in self.waitThreads:
                 self.container.delete(thread)
+                self.container.delete('image'+thread)
             self.waitThreads.remove(thread_name)
             self.redrawThread()
     
@@ -80,12 +82,16 @@ class _WaitContainer:
 
         for thread in self.waitThreads:
             tag=thread
+            self.container.create_image(int(self.container.winfo_width()/2),currentHeight,image=self.image,tag='image'+thread,anchor='n')
+            currentHeight+=70
             self.container.create_text(int(self.container.winfo_width()/2),currentHeight,text=thread,tag=tag,anchor="n")
             currentHeight+=20
         self.currentHeight=currentHeight
     
     def drawNewThread(self,thread_name):
         tag = thread_name
+        self.container.create_image(int(self.container.winfo_width()/2),self.currentHeight,image=self.image,tag='image'+thread_name,anchor='n')
+        self.currentHeight+=70
         self.container.create_text(int(self.container.winfo_width()/2),self.currentHeight,text=thread_name,tag=tag,anchor="n")
         self.currentHeight +=20
 
@@ -192,10 +198,7 @@ class Controller:
         ### FINE COSTRUZIONE FINESTRA STATICA ###
 
 
-        ### Inizializzazioni immagini ###
-        self.computerImage = ImageTk.Image.open('/home/guidosc/python-workspace/tkinterTest/computer.png')
-        self.computerImage = self.computerImage.resize((70,70))
-        self.computerImage = ImageTk.PhotoImage(master=self.masterCanvas,image=self.computerImage)
+        
         #print(self.primaryCanvas.winfo_screenmmwidth())
         #self.image=self.masterCanvas.create_image(int(self.window.winfo_screenmmwidth()/2),200,image=self.computerImage,anchor='center',tags='pc',state=tkinter.NORMAL)
         '''
@@ -232,6 +235,10 @@ class Controller:
         self.primaryCanvas['yscrollcommand']= self.yscroll.set
         self.primaryCanvas.pack(fill=BOTH,expand=True)
 
+        ### Inizializzazioni immagini ###
+        self.computerImage = ImageTk.Image.open('/home/guidosc/python-workspace/tkinterTest/computer.png')
+        self.computerImage = self.computerImage.resize((70,70))
+        self.computerImage = ImageTk.PhotoImage(master=self.primaryCanvas,image=self.computerImage)
 
         self.window.after(50,self.update)
 
@@ -265,7 +272,7 @@ class Controller:
         waitContainer.configure(yscrollcommand=scroll.set)
         self.scrolls.append(scroll)
         
-        wait_data = _WaitContainer(waitContainer)
+        wait_data = _WaitContainer(waitContainer,self.computerImage)
      
 
         ### associo al lock il relativo container ###
@@ -279,6 +286,7 @@ class Controller:
     def __moveFromInactiveToWait(self,thread,wait_container,height,orient,tag,lock):
        
         if self.primaryCanvas.coords(tag)[1]<=height:
+            self.primaryCanvas.move('image'+thread,0,2)
             self.primaryCanvas.move(tag,0,2)
             self.primaryCanvas.after(6,self.__moveFromInactiveToWait,thread,wait_container,height,orient,tag,lock)
 
@@ -287,25 +295,30 @@ class Controller:
             if orient == Controller.SINISTRA:
                 if self.primaryCanvas.coords(tag)[0]>=((20/100)*self.primaryCanvas.winfo_width()):
                     self.primaryCanvas.move(tag,-2,0)
+                    self.primaryCanvas.move('image'+thread,-2,0)
                     self.primaryCanvas.after(10,self.__moveFromInactiveToWait,thread,wait_container,height,orient,tag,lock)
                 else:
                     #wait_container.create_text(int(wait_container.winfo_width()/2),0,text=thread,tag=tag,anchor="n")
                     wait_container.addThreadInWait(thread,lock)
                     self.primaryCanvas.delete(tag)
+                    self.primaryCanvas.delete('image'+thread)
+
 
             else:
                 if self.primaryCanvas.coords(tag)[0]<=((80/100)*self.primaryCanvas.winfo_width()):
                     self.primaryCanvas.move(tag,2,0)
+                    self.primaryCanvas.move('image'+thread,2,0)
                     self.primaryCanvas.after(10,self.__moveFromInactiveToWait,thread,wait_container,height,orient,tag,lock)
                 else:
                     #wait_container.create_text(int(wait_container.winfo_width()/2),0,text=thread,tag=tag,anchor="n")
                     wait_container.addThreadInWait(thread,lock)
                     lock.canAcquire=True
                     self.primaryCanvas.delete(tag)
+                    self.primaryCanvas.delete('image'+thread)
 
     def __moveFromLockToInactive(self,tag,thread):
-        if self.primaryCanvas.coords(tag)[1]>=self.inactiveCanvas.winfo_height():
-            self.primaryCanvas.move(tag,0,-5)
+        if self.primaryCanvas.coords(tag)[1]>=(1/100)*self.screen_heigth:
+            self.primaryCanvas.move(tag,0,-3)
             self.primaryCanvas.after(15,self.__moveFromLockToInactive,tag,thread)
         else:
             self.primaryCanvas.delete(tag)
@@ -320,12 +333,12 @@ class Controller:
         wait_data = container_data[1]
         
         #if wait_container
-        height = container_data[2]
+        height = container_data[2]+((30/100)*self.containerHeight)
         orient = container_data[3]
         tag="wait"+thread+str(lock.getId())
         
-        self.primaryCanvas.create_text(int(self.primaryCanvas.winfo_width()/2),0,text=thread,tag=tag,anchor="n")
-        
+        self.primaryCanvas.create_text(int(self.primaryCanvas.winfo_width()/2),70,text=thread,tag=tag,anchor="n")
+        self.primaryCanvas.create_image(int(self.primaryCanvas.winfo_width()/2),0,image=self.computerImage,tag='image'+thread,anchor='n')
         self.__moveFromInactiveToWait(thread,wait_data,height,orient,tag,lock)
         
 
