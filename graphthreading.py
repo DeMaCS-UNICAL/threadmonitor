@@ -137,7 +137,7 @@ class Controller:
 
         ### PUNTI DI PARTENZA DEI CONTAINERS ###
         self.currentOrientPosition = 0
-        self.currentHeightPosition = 0
+        self.currentHeightPosition = 50
         self.containerWidth = self.screen_width/5
         self.containerHeight = self.screen_heigth/3
         
@@ -213,21 +213,16 @@ class Controller:
         self.yscroll.pack(side=RIGHT,fill=Y)
         '''
         ### Inizializzazione inactive Frame ###
-
-        self.inactiveFrame=Frame(self.window,background='#DACFCF')
-        self.inactiveFrame.pack(fill=BOTH)
-        self.inactiveCanvas=Canvas(self.inactiveFrame,background='red',highlightthickness=1, highlightbackground="black",height=100,width=300)
-        self.inactiveScroll = ttk.Scrollbar(self.inactiveFrame,orient=HORIZONTAL,command=self.inactiveCanvas.xview)
-        self.inactiveScroll.place(relx=0.5,rely=0.9,width=305,anchor='center')
-        self.inactiveCanvas.configure(xscrollcommand=self.inactiveScroll.set)
-        self.inactiveCanvas.pack(anchor='center',pady=10)
-        self.inactiveData = _InactiveContainer(self.inactiveCanvas)
+        
+        #self.inactiveFrame=Frame(self.window,background='#ff1a1a')
+        #self.inactiveFrame.pack(fill=BOTH)
+        
 
         ### Inizializzazione primaryCanvas ###
 
         self.frame=Frame(self.window,width=self.screen_width,height = self.screen_heigth,background='grey')
         self.frame.pack(fill=BOTH,expand=True)
-        self.primaryCanvas=Canvas(self.frame,background='grey',highlightthickness=1, highlightbackground="black",height=10000,width=self.screen_width)
+        self.primaryCanvas=Canvas(self.frame,background='grey',highlightthickness=0, highlightbackground="black",height=10000,width=self.screen_width)
         self.window.update_idletasks()
         self.yscroll = Scrollbar(self.frame, orient=VERTICAL)
         self.yscroll['command']= self.primaryCanvas.yview
@@ -235,11 +230,20 @@ class Controller:
         self.primaryCanvas['yscrollcommand']= self.yscroll.set
         self.primaryCanvas.pack(fill=BOTH,expand=True)
 
+        self.inactiveCanvas=Canvas(self.primaryCanvas,background='red',highlightthickness=1, highlightbackground="black",height=100,width=300)
+        self.inactiveScroll = ttk.Scrollbar(self.inactiveCanvas,orient=HORIZONTAL,command=self.inactiveCanvas.xview)
+        self.inactiveScroll.place(relx=0.5,rely=0.9,width=305,anchor='center')
+        self.inactiveCanvas.configure(xscrollcommand=self.inactiveScroll.set)
+        #self.inactiveCanvas.pack(anchor='center',pady=10)
+        self.inactiveData = _InactiveContainer(self.inactiveCanvas)
+        self.primaryCanvas.create_window(self.screen_width/2,0,window=self.inactiveCanvas,anchor='center')
+
         ### Inizializzazioni immagini ###
-        self.computerImage = ImageTk.Image.open('/home/guidosc/python-workspace/tkinterTest/computer.png')
+        self.computerImage = ImageTk.Image.open('resource/computer.png')
         self.computerImage = self.computerImage.resize((70,70))
         self.computerImage = ImageTk.PhotoImage(master=self.primaryCanvas,image=self.computerImage)
-
+        
+        self.background = ImageTk.Image.open('resource/background.jpg')
         self.window.after(50,self.update)
 
 
@@ -316,13 +320,25 @@ class Controller:
                     self.primaryCanvas.delete(tag)
                     self.primaryCanvas.delete('image'+thread)
 
-    def __moveFromLockToInactive(self,tag,thread):
-        if self.primaryCanvas.coords(tag)[1]>=(1/100)*self.screen_heigth:
+    def __moveFromLockToInactive(self,tag,thread,orient):
+        
+        if self.primaryCanvas.coords(tag)[1]>self.inactiveCanvas.winfo_y()+30:
             self.primaryCanvas.move(tag,0,-3)
-            self.primaryCanvas.after(15,self.__moveFromLockToInactive,tag,thread)
+            self.primaryCanvas.move('inactiveimage'+thread,0,-3)
+            self.primaryCanvas.after(12,self.__moveFromLockToInactive,tag,thread,orient)
         else:
-            self.primaryCanvas.delete(tag)
-            self.inactiveData.addThreadInactive(thread)
+            if orient == Controller.DESTRA and self.primaryCanvas.coords('inactiveimage'+thread)[0]>=((50/100)*self.screen_width):# and (self.primaryCanvas.coords('inactiveimage'+thread)[0]<=(50/100)*self.screen_width):                    self.primaryCanvas.move(tag,1,0)
+                self.primaryCanvas.move('inactiveimage'+thread,-2,0)
+                self.primaryCanvas.move(tag,-2,0)
+                self.primaryCanvas.after(10,self.__moveFromLockToInactive,tag,thread,orient)
+            elif orient == Controller.SINISTRA and self.primaryCanvas.coords('inactiveimage'+thread)[0]<=((50/100)*self.screen_width):# and self.primaryCanvas.coords('inactiveimage'+thread)[0]>=(50/100)*self.screen_width:                    self.primaryCanvas.move(tag,1,0)
+                self.primaryCanvas.move('inactiveimage'+thread,2,0)
+                self.primaryCanvas.move(tag,2,0)
+                self.primaryCanvas.after(10,self.__moveFromLockToInactive,tag,thread,orient)
+            else:
+                self.primaryCanvas.delete(tag)
+                self.primaryCanvas.delete('inactiveimage'+thread)
+                self.inactiveData.addThreadInactive(thread)
 
 
     def setWaitThread(self,thread,lock):
@@ -358,15 +374,17 @@ class Controller:
         container_data = self.lockContainer[lock]
         lock_container=container_data[0]
         lock_container.delete(thread)
-        height = container_data[2]
+        height = container_data[2]+((80/100)*self.containerHeight)
         orient = container_data[3]
 
         tag = "release"+thread
         if orient== Controller.SINISTRA:
-            self.primaryCanvas.create_text((5/100)*self.primaryCanvas.winfo_width(),height+self.containerHeight,text = thread,tag=tag,anchor='n')
+            self.primaryCanvas.create_image((5/100)*self.primaryCanvas.winfo_width(),height,tag = 'inactiveimage'+thread,image=self.computerImage,anchor='n')
+            self.primaryCanvas.create_text((5/100)*self.primaryCanvas.winfo_width(),height+70,text = thread,tag=tag,anchor='n')
         else:
-            self.primaryCanvas.create_text((95/100)*self.primaryCanvas.winfo_width(),height+self.containerHeight,text = thread,tag=tag,anchor='n')
-        self.__moveFromLockToInactive(tag,thread)
+            self.primaryCanvas.create_image((95/100)*self.primaryCanvas.winfo_width(),height,tag = 'inactiveimage'+thread,image=self.computerImage,anchor='n')
+            self.primaryCanvas.create_text((95/100)*self.primaryCanvas.winfo_width(),height+70,text = thread,tag=tag,anchor='n')
+        self.__moveFromLockToInactive(tag,thread,orient)
 
     def update(self):
         self.primaryCanvas.configure(scrollregion=self.primaryCanvas.bbox("all"))
@@ -379,7 +397,9 @@ class Controller:
     
     def start(self):
         print("Number of lock: ",len(self.containers))
-        self.primaryCanvas.configure(height=self.containerHeight*len(self.lockContainer))
+        height = self.containerHeight*len(self.lockContainer)
+        self.primaryCanvas.configure(height=height)
+       
         '''
         for key in self.lockContainer.keys():
             canvas_data = self.lockContainer[key]
