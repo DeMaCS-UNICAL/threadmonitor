@@ -1,4 +1,4 @@
-from threading import Lock
+from threading import Lock,Condition
 from threading import current_thread
 from time import sleep
 from tkinter import ttk
@@ -8,31 +8,34 @@ from threading import Lock,Thread
 from PIL import ImageTk
 import os
 import threading
-
+import time
 
 
 
 
 class _InactiveContainer:
-    def __init__(self,inactiveContainer):
+    def __init__(self,inactiveContainer,image):
         self.container = inactiveContainer
         self.lock = Lock()
         self.inactiveThreads = []
         self.currentWidth = 0
+        self.image = image
 
-    def addThreadInactive(self,thread_name):
+    def addThreadInactive(self,thread_name,lock):
         with self.lock:
             self.inactiveThreads.append(thread_name)
-            print("Add thread inactive ",thread_name)
-            self.drawNewThread(thread_name)
+            #print("Add thread inactive ",thread_name)
+            self.drawNewThread(thread_name,lock)
 
     def removeThreadInactive(self,thread_name):
         with self.lock:
-            print(self.inactiveThreads)
-            for thread in self.inactiveThreads:
-                self.container.delete(thread)
-            self.inactiveThreads.remove(thread_name)
-            self.redrawThread()
+            if thread_name in self.inactiveThreads:
+                for thread in self.inactiveThreads:
+                    self.container.delete('image'+thread)
+                    self.container.delete(thread)
+                self.inactiveThreads.remove(thread_name)
+                #print(self.inactiveThreads)
+                self.redrawThread()
     
     def redrawThread(self):
         currentWidth = 0
@@ -40,14 +43,21 @@ class _InactiveContainer:
 
         for thread in self.inactiveThreads:
             tag=thread
-            self.container.create_text(currentWidth,int(self.container.winfo_height()/2),text=thread,tag=tag,anchor="n")
-            currentWidth+=50
+            self.container.create_image(currentWidth,0,image=self.image,tag='image'+tag,anchor='n')
+            self.container.create_text(currentWidth,70,text=thread,tag=tag,anchor="n")
+            currentWidth+=100
         self.currentWidth=currentWidth
     
-    def drawNewThread(self,thread_name):
+    def drawNewThread(self,thread_name,lock):
+        lock.releaseLock.acquire()
         tag = thread_name
-        self.container.create_text(self.currentWidth,int(self.container.winfo_height()/2),text=thread_name,tag=tag,anchor="n")
+        self.container.create_image(self.currentWidth,0,image=self.image,tag='image'+tag,anchor='n')
+        self.container.create_text(self.currentWidth,70,text=thread_name,tag=tag,anchor="n")
         self.currentWidth +=100
+        lock.releaseCondition.notify_all()
+        lock.isReleased=True
+        print('release lock draw ',lock.getId(), current_thread().getName())
+        lock.releaseLock.release()
 
 
 
@@ -62,14 +72,14 @@ class _WaitContainer:
     def addThreadInWait(self,thread_name,lock):
         with self.lock:
             self.waitThreads.append(thread_name)
-            print("Add thread ",thread_name)
+            #print("Add thread ",thread_name)
             self.drawNewThread(thread_name)
             lock.canAquire=True
-            print('acquired')
+            #print('acquired')
 
     def removeThreadInWait(self,thread_name):
         with self.lock:
-            print(self.waitThreads)
+            #print(self.waitThreads)
             for thread in self.waitThreads:
                 self.container.delete(thread)
                 self.container.delete('image'+thread)
@@ -199,7 +209,7 @@ class Controller:
 
 
         
-        #print(self.primaryCanvas.winfo_screenmmwidth())
+        ##print(self.primaryCanvas.winfo_screenmmwidth())
         #self.image=self.masterCanvas.create_image(int(self.window.winfo_screenmmwidth()/2),200,image=self.computerImage,anchor='center',tags='pc',state=tkinter.NORMAL)
         '''
         ### Lista di tutti i container creati ###
@@ -235,7 +245,6 @@ class Controller:
         self.inactiveScroll.place(relx=0.5,rely=0.9,width=305,anchor='center')
         self.inactiveCanvas.configure(xscrollcommand=self.inactiveScroll.set)
         #self.inactiveCanvas.pack(anchor='center',pady=10)
-        self.inactiveData = _InactiveContainer(self.inactiveCanvas)
         self.primaryCanvas.create_window(self.screen_width/2,0,window=self.inactiveCanvas,anchor='center')
 
         ### Inizializzazioni immagini ###
@@ -246,12 +255,13 @@ class Controller:
         self.background = ImageTk.Image.open('resource/background.jpg')
         self.window.after(50,self.update)
 
+        self.inactiveData = _InactiveContainer(self.inactiveCanvas,self.computerImage)
 
     
 
     def addThread(self,thread):
         self.threads.append(thread)
-
+        #self.inactiveData.addThreadInactive(thread.getName())
 
     def addLock(self,lock):
         ### creo il container e lo aggiungo alla lista di container ###
@@ -287,12 +297,12 @@ class Controller:
         if(self.currentOrientPosition%2 == 0):
             self.currentHeightPosition+=self.containerHeight+30
         
-    def __moveFromInactiveToWait(self,thread,wait_container,height,orient,tag,lock):
+    def __moveFromInactiveToWait(self,thread,wait_container,height,orient,tag,lock,startTime):
        
         if self.primaryCanvas.coords(tag)[1]<=height:
             self.primaryCanvas.move('image'+thread,0,2)
             self.primaryCanvas.move(tag,0,2)
-            self.primaryCanvas.after(6,self.__moveFromInactiveToWait,thread,wait_container,height,orient,tag,lock)
+            self.primaryCanvas.after(6,self.__moveFromInactiveToWait,thread,wait_container,height,orient,tag,lock,startTime)
 
                 
         else:
@@ -300,9 +310,11 @@ class Controller:
                 if self.primaryCanvas.coords(tag)[0]>=((20/100)*self.primaryCanvas.winfo_width()):
                     self.primaryCanvas.move(tag,-2,0)
                     self.primaryCanvas.move('image'+thread,-2,0)
-                    self.primaryCanvas.after(10,self.__moveFromInactiveToWait,thread,wait_container,height,orient,tag,lock)
+                    self.primaryCanvas.after(10,self.__moveFromInactiveToWait,thread,wait_container,height,orient,tag,lock,startTime)
                 else:
                     #wait_container.create_text(int(wait_container.winfo_width()/2),0,text=thread,tag=tag,anchor="n")
+                    endTime = time.time()
+                    #print('Time is: ',endTime-startTime, '\nHeight is: ',height,'\nWidth is: ',self.primaryCanvas.winfo_width(),'\nCoords of thread is: ',self.primaryCanvas.coords(tag))
                     wait_container.addThreadInWait(thread,lock)
                     self.primaryCanvas.delete(tag)
                     self.primaryCanvas.delete('image'+thread)
@@ -312,33 +324,37 @@ class Controller:
                 if self.primaryCanvas.coords(tag)[0]<=((80/100)*self.primaryCanvas.winfo_width()):
                     self.primaryCanvas.move(tag,2,0)
                     self.primaryCanvas.move('image'+thread,2,0)
-                    self.primaryCanvas.after(10,self.__moveFromInactiveToWait,thread,wait_container,height,orient,tag,lock)
+                    self.primaryCanvas.after(10,self.__moveFromInactiveToWait,thread,wait_container,height,orient,tag,lock,startTime)
                 else:
                     #wait_container.create_text(int(wait_container.winfo_width()/2),0,text=thread,tag=tag,anchor="n")
+                    endTime = time.time()
+                    ##print('Time is: ',endTime-startTime, '\nHeight is: ',height,'\nWidth is: ',self.primaryCanvas.winfo_width())
                     wait_container.addThreadInWait(thread,lock)
                     lock.canAcquire=True
                     self.primaryCanvas.delete(tag)
                     self.primaryCanvas.delete('image'+thread)
 
-    def __moveFromLockToInactive(self,tag,thread,orient):
+    def __moveFromLockToInactive(self,tag,thread,orient,startTime,lock):
         
         if self.primaryCanvas.coords(tag)[1]>self.inactiveCanvas.winfo_y()+30:
             self.primaryCanvas.move(tag,0,-3)
             self.primaryCanvas.move('inactiveimage'+thread,0,-3)
-            self.primaryCanvas.after(12,self.__moveFromLockToInactive,tag,thread,orient)
+            self.primaryCanvas.after(12,self.__moveFromLockToInactive,tag,thread,orient,startTime,lock)
         else:
             if orient == Controller.DESTRA and self.primaryCanvas.coords('inactiveimage'+thread)[0]>=((50/100)*self.screen_width):# and (self.primaryCanvas.coords('inactiveimage'+thread)[0]<=(50/100)*self.screen_width):                    self.primaryCanvas.move(tag,1,0)
                 self.primaryCanvas.move('inactiveimage'+thread,-2,0)
                 self.primaryCanvas.move(tag,-2,0)
-                self.primaryCanvas.after(10,self.__moveFromLockToInactive,tag,thread,orient)
+                self.primaryCanvas.after(10,self.__moveFromLockToInactive,tag,thread,orient,startTime,lock)
             elif orient == Controller.SINISTRA and self.primaryCanvas.coords('inactiveimage'+thread)[0]<=((50/100)*self.screen_width):# and self.primaryCanvas.coords('inactiveimage'+thread)[0]>=(50/100)*self.screen_width:                    self.primaryCanvas.move(tag,1,0)
                 self.primaryCanvas.move('inactiveimage'+thread,2,0)
                 self.primaryCanvas.move(tag,2,0)
-                self.primaryCanvas.after(10,self.__moveFromLockToInactive,tag,thread,orient)
+                self.primaryCanvas.after(10,self.__moveFromLockToInactive,tag,thread,orient,startTime,lock)
             else:
                 self.primaryCanvas.delete(tag)
                 self.primaryCanvas.delete('inactiveimage'+thread)
-                self.inactiveData.addThreadInactive(thread)
+                self.inactiveData.addThreadInactive(thread,lock)
+                endTime = time.time()
+                #print('Release time is: ',endTime-startTime)
 
 
     def setWaitThread(self,thread,lock):
@@ -355,25 +371,29 @@ class Controller:
         
         self.primaryCanvas.create_text(int(self.primaryCanvas.winfo_width()/2),70,text=thread,tag=tag,anchor="n")
         self.primaryCanvas.create_image(int(self.primaryCanvas.winfo_width()/2),0,image=self.computerImage,tag='image'+thread,anchor='n')
-        self.__moveFromInactiveToWait(thread,wait_data,height,orient,tag,lock)
-        
+        timeStart = time.time()
+        self.__moveFromInactiveToWait(thread,wait_data,height,orient,tag,lock,timeStart)
+        self.inactiveData.removeThreadInactive(thread)
 
-
+        sleepTime = (height+(self.primaryCanvas.winfo_width()/2)-((30/100)*self.primaryCanvas.winfo_width()))/100 
+        return sleepTime
     
     def setAcquireThread(self,thread,lock):
         container_data = self.lockContainer[lock]
-        print('Acquire lock from ',lock.getId())
+        #print('Acquire lock from ',lock.getId())
         lock_container = container_data[0]
         tag=thread
         
         wait_container = container_data[1]
         wait_container.removeThreadInWait(thread)
-        lock_container.create_text((50/100)*self.containerWidth,(80/100)*self.containerHeight,text=thread,tag=tag,anchor='n',fill='green')
+        lock_container.create_image((50/100)*self.containerWidth,(60/100)*self.containerHeight,tag = 'acquireImage'+thread,image=self.computerImage,anchor='n')
+        lock_container.create_text((50/100)*self.containerWidth,(90/100)*self.containerHeight,text=thread,tag=tag,anchor='n',fill='green')
     
     def setReleaseThread(self,thread,lock):
         container_data = self.lockContainer[lock]
         lock_container=container_data[0]
         lock_container.delete(thread)
+        lock_container.delete('acquireImage'+thread)
         height = container_data[2]+((80/100)*self.containerHeight)
         orient = container_data[3]
 
@@ -384,7 +404,11 @@ class Controller:
         else:
             self.primaryCanvas.create_image((95/100)*self.primaryCanvas.winfo_width(),height,tag = 'inactiveimage'+thread,image=self.computerImage,anchor='n')
             self.primaryCanvas.create_text((95/100)*self.primaryCanvas.winfo_width(),height+70,text = thread,tag=tag,anchor='n')
-        self.__moveFromLockToInactive(tag,thread,orient)
+        startTime = time.time()
+        self.__moveFromLockToInactive(tag,thread,orient,startTime,lock)
+        sleepTime = (height+(self.primaryCanvas.winfo_width()/2)-((30/100)*self.primaryCanvas.winfo_width()))/80
+        return sleepTime 
+
 
     def update(self):
         self.primaryCanvas.configure(scrollregion=self.primaryCanvas.bbox("all"))
@@ -396,7 +420,7 @@ class Controller:
         self.window.after(50,self.update)
     
     def start(self):
-        print("Number of lock: ",len(self.containers))
+        #print("Number of lock: ",len(self.containers))
         height = self.containerHeight*len(self.lockContainer)
         self.primaryCanvas.configure(height=height)
        
@@ -431,27 +455,43 @@ class GraphLock:
         self.waitLock = Lock()
         self.lock = Lock()
         self.canAcquire=False
-        
+        self.isReleased = False
+        self.isInWait = False
+        self.releaseLock=Lock()
+        self.releaseCondition = Condition(self.releaseLock)        
+        self.waitCondition = Condition(self.waitLock)
 
     def acquire(self):
         self.waitLock.acquire()
-        self.controller.setWaitThread(current_thread().getName(),self)
-        sleep(9)
+        print('\nwait lock ',self.id, current_thread().getName())
+
+        self.isReleased=False
+        sleepTime = self.controller.setWaitThread(current_thread().getName(),self)
+        sleep(sleepTime)
         self.waitLock.release()
-        print(current_thread().getName()," have released")
+        ##print(current_thread().getName()," have released")
         self.lock.acquire()
+        print('ACQUIRE LOCK ',self.id, current_thread().getName(),'\n')
+
         self.controller.setAcquireThread(current_thread().getName(),self)
     
     def release(self):
+        self.releaseLock.acquire()
         self.controller.setReleaseThread(current_thread().getName(),self)
-        sleep(3)
+        while not self.isReleased :
+            print(current_thread().getName(),'sta aspettando sul lock ',self.id)
+            self.releaseCondition.wait()
+        self.releaseLock.release()
+        print('released lock ',self.id, current_thread().getName())
+        self.isReleased = False
         self.lock.release()
+        sleep(2)
     def getId(self):
         return self.id
 
 class GraphThread(Thread):
     def __init__(self):
-        print('ok init graphthread')
+        ##print('ok init graphthread')
         super().__init__()
         self.controller=controller
         self.controller.addThread(self)
