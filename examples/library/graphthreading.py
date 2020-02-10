@@ -24,7 +24,7 @@ class _InactiveContainer:
     def addThreadInactive(self,thread_name,lock):
         with self.lock:
             self.inactiveThreads.append(thread_name)
-            #print("Add thread inactive ",thread_name)
+            ##print("Add thread inactive ",thread_name)
             self.drawNewThread(thread_name,lock)
 
     def removeThreadInactive(self,thread_name):
@@ -240,7 +240,7 @@ class Controller:
         self.primaryCanvas['yscrollcommand']= self.yscroll.set
         self.primaryCanvas.pack(fill=BOTH,expand=True)
 
-        self.inactiveCanvas=Canvas(self.primaryCanvas,background='red',highlightthickness=1, highlightbackground="black",height=150,width=500)
+        self.inactiveCanvas=Canvas(self.primaryCanvas,background='white',highlightthickness=1, highlightbackground="black",height=150,width=500)
         self.inactiveScroll = ttk.Scrollbar(self.inactiveCanvas,orient=HORIZONTAL,command=self.inactiveCanvas.xview)
         self.inactiveScroll.place(relx=0.5,rely=0.93,width=305,anchor='center')
         self.inactiveCanvas.configure(xscrollcommand=self.inactiveScroll.set)
@@ -256,6 +256,18 @@ class Controller:
         self.computerImage = ImageTk.Image.open('resource/computer.png')
         self.computerImage = self.computerImage.resize((70,70))
         self.computerImage = ImageTk.PhotoImage(master=self.primaryCanvas,image=self.computerImage)
+
+        self.redSem = ImageTk.Image.open('resource/redSem.png')
+        self.redSem = self.redSem.resize((20,20))
+        self.redSem = ImageTk.PhotoImage(master=self.primaryCanvas,image=self.redSem)
+
+        self.greenSem = ImageTk.Image.open('resource/greenSem.png')
+        self.greenSem = self.greenSem.resize((20,20))
+        self.greenSem = ImageTk.PhotoImage(master=self.primaryCanvas,image=self.greenSem)
+
+        self.greySem = ImageTk.Image.open('resource/greySem.png')
+        self.greySem = self.greySem.resize((20,20))
+        self.greySem = ImageTk.PhotoImage(master=self.primaryCanvas,image=self.greySem)
        
         self.window.after(50,self.update)
         self.window.protocol('WM_DELETE_WINDOW',self.__onclose)
@@ -285,6 +297,14 @@ class Controller:
         container.create_window(self.containerWidth/2,(25/100)*self.containerHeight,window=waitContainer,anchor='center')#.place(relx=0.5,anchor='center',rely=0.25, relheight=0.50,relwidth=1)
         self.waitContainer[lock]=waitContainer
 
+        container.create_image(self.containerWidth*(80/100),self.containerHeight*(80/100),image=self.redSem, tag="redSem",state="hidden")
+        container.create_image(self.containerWidth*(80/100),self.containerHeight*(80/100),image=self.greySem, tag="greyRedSem")
+
+        container.create_image(self.containerWidth*(80/100),self.containerHeight*(90/100),image=self.greenSem, tag="greenSem")
+        container.create_image(self.containerWidth*(80/100),self.containerHeight*(90/100),image=self.greySem, tag="greyGreenSem",state="hidden")
+
+
+        #container.itemconfigure("redSem",state="hidden")
         
         
         ### creo il relativo scroll ###
@@ -397,6 +417,11 @@ class Controller:
         wait_container.removeThreadInWait(thread)
         lock_container.create_image((50/100)*self.containerWidth,(60/100)*self.containerHeight,tag = 'acquireImage'+thread,image=self.computerImage,anchor='n')
         lock_container.create_text((50/100)*self.containerWidth,(83/100)*self.containerHeight,text=thread,tag=tag,anchor='n',fill='green')
+        lock_container.itemconfigure('greyGreenSem',state="normal")
+        lock_container.itemconfigure('greyRedSem',state="hidden")
+        lock_container.itemconfigure('redSem',state="normal")
+
+
     
     def setReleaseThread(self,thread,lock):
         container_data = self.lockContainer[lock]
@@ -414,9 +439,13 @@ class Controller:
             self.primaryCanvas.create_image((95/100)*self.primaryCanvas.winfo_width(),height,tag = 'inactiveimage'+thread,image=self.computerImage,anchor='n')
             self.primaryCanvas.create_text((95/100)*self.primaryCanvas.winfo_width(),height+70,text = thread,tag=tag,anchor='n')
         startTime = time.time()
+        lock_container.itemconfigure('greyGreenSem',state="hidden")
+        lock_container.itemconfigure('greyRedSem',state="normal")
         self.__moveFromLockToInactive(tag,thread,orient,startTime,lock)
         sleepTime = (height+(self.primaryCanvas.winfo_width()/2)-((30/100)*self.primaryCanvas.winfo_width()))/80
-        return sleepTime 
+        return sleepTime
+        
+        #lock_container.itemconfigure('redSem',state="normal") 
 
 
     def update(self):
@@ -486,7 +515,7 @@ class GraphLock:
         self.waitLock.release()
         ###print(current_thread().getName()," have released")
         self.lock.acquire()
-        #print('ACQUIRE LOCK ',self.id, current_thread().getName(),'\n')
+        ##print('ACQUIRE LOCK ',self.id, current_thread().getName(),'\n')
 
         self.controller.setAcquireThread(current_thread().getName(),self)
         sleep(3)
@@ -495,10 +524,10 @@ class GraphLock:
         self.releaseLock.acquire()
         self.controller.setReleaseThread(current_thread().getName(),self)
         while not self.isReleased :
-            #print(current_thread().getName(),'sta aspettando sul lock ',self.id)
+            ##print(current_thread().getName(),'sta aspettando sul lock ',self.id)
             self.releaseCondition.wait()
         self.releaseLock.release()
-        #print('released lock ',self.id, current_thread().getName())
+        ##print('released lock ',self.id, current_thread().getName())
         self.isReleased = False
         self.lock.release()
         sleep(2)
@@ -507,7 +536,7 @@ class GraphLock:
 
 class GraphThread(Thread):
     def __init__(self):
-        ##print('ok init graphthread')
+        ###print('ok init graphthread')
         super().__init__()
         self.controller=controller
         self.controller.addThread(self)
