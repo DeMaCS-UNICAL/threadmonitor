@@ -9,6 +9,8 @@ from PIL import ImageTk
 import os
 import threading
 import time
+from functools import partial
+
 
 
 
@@ -105,8 +107,13 @@ class _WaitContainer:
         self.container.create_text(int(self.container.winfo_width()/2),self.currentHeight,text=thread_name,tag=tag,anchor="n")
         self.currentHeight +=20
 
+    def drawFutureAcquireThread(self):
+        if len(self.waitThreads)>0:
+            self.container.itemconfigure(self.waitThreads[0],fill='red')
 
-
+class _modifyLockNameWindow:
+    def __init__(self,lock):
+        pass
 class Controller:
     FINISH=False
     DESTRA = 1
@@ -274,7 +281,15 @@ class Controller:
 
         self.inactiveData = _InactiveContainer(self.inactiveCanvas,self.computerImage)
 
-    
+    def createPopupLock(self,label):
+        popup = Toplevel()
+        popup.title(label['text'])
+        popup.geometry('400x100')
+        textField = Text(popup)
+        textField.place(relx=0,rely=0,relheight=0.5,relwidth=1)
+        button = Button(popup,text='Change name',command= lambda: (label.configure(text=textField.get('1.0','end-1c'))))
+        button.place(relx=0.5,rely=1,anchor='s')
+        popup.mainloop()
 
     def addThread(self,thread):
         self.threads.append(thread)
@@ -291,7 +306,11 @@ class Controller:
         self.primaryCanvas.create_window(relX,self.currentHeightPosition,window=container,anchor='n')#container.place(relx=relX,y=self.currentHeightPosition,anchor='n')
 
         lockLabel = Label(container,text = 'Lock '+str(lock.getId()))
-        lockLabel.place(relx=0.5,rely=0.98,anchor='center')
+        lockLabel.place(relx=0.5,rely=0.95,anchor='center')
+
+        changeLockLabelData = partial(self.createPopupLock,lockLabel)
+        button = Button(container,text='Change lock name',command = changeLockLabelData)
+        button.place(relx=0.5,rely=0.5,anchor='n')
         ### creo il container per i thread in wait ###
         waitContainer= Canvas(container,background='#ffff66',highlightthickness=1, highlightbackground="black",width=self.containerWidth,height=int(self.containerHeight/2))
         container.create_window(self.containerWidth/2,(25/100)*self.containerHeight,window=waitContainer,anchor='center')#.place(relx=0.5,anchor='center',rely=0.25, relheight=0.50,relwidth=1)
@@ -317,7 +336,7 @@ class Controller:
      
 
         ### associo al lock il relativo container ###
-        self.lockContainer[lock]=[container,wait_data,self.currentHeightPosition,self.currentOrientPosition%2]
+        self.lockContainer[lock]=[container,wait_data,self.currentHeightPosition,self.currentOrientPosition%2,lockLabel]
         
         ### aggiorno le variabili per il posizionamento ###
         self.currentOrientPosition+=1
@@ -430,7 +449,8 @@ class Controller:
         lock_container.delete('acquireImage'+thread)
         height = container_data[2]+((80/100)*self.containerHeight)
         orient = container_data[3]
-
+        wait_data= container_data[1]
+        wait_data.drawFutureAcquireThread()
         tag = "release"+thread
         if orient== Controller.SINISTRA:
             self.primaryCanvas.create_image((5/100)*self.primaryCanvas.winfo_width(),height,tag = 'inactiveimage'+thread,image=self.computerImage,anchor='n')
@@ -524,7 +544,6 @@ class GraphLock:
         self.releaseLock.acquire()
         self.controller.setReleaseThread(current_thread().getName(),self)
         while not self.isReleased :
-            ##print(current_thread().getName(),'sta aspettando sul lock ',self.id)
             self.releaseCondition.wait()
         self.releaseLock.release()
         ##print('released lock ',self.id, current_thread().getName())
