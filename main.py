@@ -1,4 +1,4 @@
-from graphthreading import Controller,GraphLock,GraphThread
+from graphthreading import Controller,GraphLock,GraphThread,GraphCondition
 from threading import Thread,current_thread
 from time import sleep
 import graphthreading
@@ -7,6 +7,7 @@ import graphthreading
 class Structure:
     def __init__(self):
         self.lock = GraphLock()
+        self.condition = GraphCondition(self.lock)
     
     def get(self):
         self.lock.acquire()
