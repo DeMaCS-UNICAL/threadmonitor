@@ -269,8 +269,8 @@ class Controller:
         self.playButton = Button(self.primaryCanvas,text='play',command=self.play)
         self.stopButton = Button(self.primaryCanvas,text='stop',command=self.stop)
 
-        self.playButton.place(relx=0.8,rely=0.02)
-        self.stopButton.place(relx=0.85,rely=0.02)
+        self.playButton.place(relx=0.93,rely=0.02)
+        self.stopButton.place(relx=0.93,rely=0.08)
         ### Inizializzazioni immagini ###
         self.imageComputerHeight = int((15/100)*self.containerHeight)
         self.computerImage = ImageTk.Image.open('resource/computer.png')
@@ -400,7 +400,7 @@ class Controller:
         
         wait_data = _WaitContainer(waitContainer,self.computerImage)
 
-        conditionContainer = Canvas(container,background='#ff9800',highlightthickness=1, highlightbackground="black",width=self.containerWidth,height=int(self.containerHeight*(25/100)))
+        conditionContainer = Canvas(container,background='#ffc04c',highlightthickness=1, highlightbackground="black",width=self.containerWidth,height=int(self.containerHeight*(25/100)))
         container.create_window(self.containerWidth/2,(75/100)*self.containerHeight,window=conditionContainer,anchor='n')#.place(relx=0.5,anchor='center',rely=0.25, relheight=0.50,relwidth=1)
         conditionContainer.create_image(self.containerWidth*(90/100),(20/100)*(25/100)*self.containerHeight,image=self.redSem, tag="redSem")
         conditionContainer.create_image(self.containerWidth*(90/100),(20/100)*(25/100)*self.containerHeight,image=self.greySem, tag="greyRedSem")
