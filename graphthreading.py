@@ -1,3 +1,5 @@
+# coding=utf-8
+
 from threading import Lock,Condition
 from threading import current_thread
 from time import sleep
