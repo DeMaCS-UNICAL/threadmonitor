@@ -110,11 +110,10 @@ class _WaitContainer:
         self.container.create_text(int(self.container.winfo_width()/2),self.currentHeight,text=thread.getName(),tag='text'+tag,anchor="n")
         self.currentHeight +=20
 
-    def drawFutureAcquireThread(self):
-        if len(self.waitThreads)>0:
-            #self.container.itemconfigure('text'+str(self.waitThreads[0].ident),fill='#cd5b45')
-            #TODO
-            pass
+    def drawFutureAcquireThread(self,thread):
+        self.container.itemconfigure('text'+str(thread.ident),fill='#cd5b45')
+            
+            
 
 class _modifyLockNameWindow:
     def __init__(self,lock):
@@ -125,18 +124,21 @@ class Controller:
     SINISTRA = 0
     INDEX_WAIT_CONTAINER = 1
     INDEX_LOCK_CONTAINER = 1
-
+    isStopped = False
     
-    def __init__(self):
+    
+    def __init__(self,stepLock,stepCondition):
         
         self.window=Tk()
-
+        self.stepLock=stepLock
+        self.stepCondition = stepCondition
 
         self.screen_width=self.window.winfo_screenwidth()
         self.screen_heigth=self.window.winfo_screenheight()
         self.pad = 3
         self.window.geometry('{0}x{1}'.format(self.screen_width-self.pad,self.screen_heigth-self.pad))
         self.started = False
+        self.step = 0
         ### INIZIALIZZAZIONE LOGICA ###
 
         ### hashMap contenente come chiave il nome del lock, e come valore il relativo canvas ###
@@ -244,7 +246,7 @@ class Controller:
 
         self.frame=Frame(self.window,width=self.screen_width,height = self.screen_heigth,background='grey')
         self.frame.pack(fill=BOTH,expand=True)
-        self.primaryCanvas=Canvas(self.frame,background='#dbdbdb',highlightthickness=0, highlightbackground="black",height=10000,width=self.screen_width)
+        self.primaryCanvas=Canvas(self.frame,background='#A0A0A0',highlightthickness=0, highlightbackground="black",height=10000,width=self.screen_width)
         self.window.update_idletasks()
         self.yscroll = Scrollbar(self.frame, orient=VERTICAL)
         self.yscroll['command']= self.primaryCanvas.yview
@@ -268,9 +270,12 @@ class Controller:
 
         self.playButton = Button(self.primaryCanvas,text='play',command=self.play)
         self.stopButton = Button(self.primaryCanvas,text='stop',command=self.stop)
+        self.nextStepButton = Button(self.primaryCanvas,text='next step',command=self.nextStep)
 
         self.playButton.place(relx=0.93,rely=0.02)
         self.stopButton.place(relx=0.93,rely=0.08)
+        self.nextStepButton.place(relx=0.93,rely=0.14)
+
         ### Inizializzazioni immagini ###
         self.imageComputerHeight = int((15/100)*self.containerHeight)
         self.computerImage = ImageTk.Image.open('resource/computer.png')
@@ -291,18 +296,28 @@ class Controller:
        
         self.window.after(50,self.update)
         self.window.protocol('WM_DELETE_WINDOW',self.__onclose)
-
+        
         self.inactiveData = _InactiveContainer(self.inactiveCanvas,self.computerImage)
 
     def play(self):
-        self.primaryCanvas.configure(background='#dbdbdb')
+        self.isStopped=False
+        self.primaryCanvas.configure(background='#A0A0A0')
         for lock in self.lockContainer.keys():
             lock.playController.play()
     
     def stop(self):
+        self.isStopped=True
         self.primaryCanvas.configure(background='#696969')
         for lock in self.lockContainer.keys():
             lock.playController.stop()
+    
+    def nextStep(self):
+        with self.stepLock:
+            self.step+=1
+            self.stepCondition.notifyAll()
+    
+    def decreaseStep(self):
+        self.step-=1
     def changeThreadName(self,label,textField,menu,button):
         threads={}
         for thread in self.threads:
@@ -453,24 +468,21 @@ class Controller:
                     self.primaryCanvas.delete(tag)
                     self.primaryCanvas.delete('image'+str(thread.ident))
 
-    def __moveFromLockToInactive(self,tag,thread,orient,startTime,lock,wait_data,container):
+    def __moveFromLockToInactive(self,tag,thread,orient,startTime,lock,container):
         
         if self.primaryCanvas.coords('inactiveimage'+str(thread.ident))[1]>0:
             self.primaryCanvas.move(tag,0,-3)
             self.primaryCanvas.move('inactiveimage'+str(thread.ident),0,-3)
-            wait_data.drawFutureAcquireThread()
-            self.primaryCanvas.after(12,self.__moveFromLockToInactive,tag,thread,orient,startTime,lock,wait_data,container)
+            self.primaryCanvas.after(12,self.__moveFromLockToInactive,tag,thread,orient,startTime,lock,container)
         else:
             if orient == Controller.DESTRA and self.primaryCanvas.coords('inactiveimage'+str(thread.ident))[0]>=((50/100)*self.screen_width):# and (self.primaryCanvas.coords('inactiveimage'+thread)[0]<=(50/100)*self.screen_width):                    self.primaryCanvas.move(tag,1,0)
                 self.primaryCanvas.move('inactiveimage'+str(thread.ident),-2,0)
                 self.primaryCanvas.move(tag,-2,0)
-                wait_data.drawFutureAcquireThread()
-                self.primaryCanvas.after(10,self.__moveFromLockToInactive,tag,thread,orient,startTime,lock,wait_data,container)
+                self.primaryCanvas.after(10,self.__moveFromLockToInactive,tag,thread,orient,startTime,lock,container)
             elif orient == Controller.SINISTRA and self.primaryCanvas.coords('inactiveimage'+str(thread.ident))[0]<=((50/100)*self.screen_width):# and self.primaryCanvas.coords('inactiveimage'+thread)[0]>=(50/100)*self.screen_width:                    self.primaryCanvas.move(tag,1,0)
                 self.primaryCanvas.move('inactiveimage'+str(thread.ident),2,0)
                 self.primaryCanvas.move(tag,2,0)
-                wait_data.drawFutureAcquireThread()
-                self.primaryCanvas.after(10,self.__moveFromLockToInactive,tag,thread,orient,startTime,lock,wait_data,container)
+                self.primaryCanvas.after(10,self.__moveFromLockToInactive,tag,thread,orient,startTime,lock,container)
             else:
                 self.primaryCanvas.delete(tag)
                 self.primaryCanvas.delete('inactiveimage'+str(thread.ident))
@@ -549,10 +561,9 @@ class Controller:
         lock_container=container_data[0]
         lock_container.delete('text'+str(thread.ident))
         lock_container.delete('acquireImage'+str(thread.ident))
-        height = container_data[3]+((80/100)*self.containerHeight)
+        height = container_data[3]+((50/100)*self.containerHeight)
         orient = container_data[4]
-        wait_data= container_data[1]
-        wait_data.drawFutureAcquireThread()
+        
         tag = "release"+str(thread.ident)
         if orient== Controller.SINISTRA:
             self.primaryCanvas.create_image((5/100)*self.primaryCanvas.winfo_width(),height,tag = 'inactiveimage'+str(thread.ident),image=self.computerImage,anchor='n')
@@ -564,11 +575,15 @@ class Controller:
         lock_container.itemconfigure('greyRedSem',state="normal")
         self.releasingLock.append(lock)
         lock_container.after(500,self.__blinkLock,lock_container,True,lock)
-        self.__moveFromLockToInactive(tag,thread,orient,startTime,lock,wait_data,lock_container)
+        self.__moveFromLockToInactive(tag,thread,orient,startTime,lock,lock_container)
         sleepTime = (height+(self.primaryCanvas.winfo_width()/2)-((30/100)*self.primaryCanvas.winfo_width()))/80
         return sleepTime
         
         #lock_container.itemconfigure('redSem',state="normal") 
+    def drawFutureLockThread(self,thread,lock):
+        container_data = self.lockContainer[lock]
+        wait_data= container_data[1]
+        wait_data.drawFutureAcquireThread(thread)
 
     def notifyLock(self,lock):
         container_data = self.lockContainer[lock]
@@ -630,14 +645,18 @@ class Controller:
         for thread in self.threads:
             thread.exit()
  
-    
-controller = Controller()
+stepLock = Lock()
+stepCondition = Condition(stepLock)
+controller = Controller(stepLock,stepCondition)
 
 class _StopAndPlay:
     def __init__(self):
         self.lock = Lock()
         self.condition = Condition(self.lock)
+        self.stepLock = stepLock
+        self.stepCondition = stepCondition
         self.running=True
+        self.controller = controller
     
     def stop(self):
         with self.lock:
@@ -649,9 +668,11 @@ class _StopAndPlay:
             self.condition.notifyAll()
     
     def run(self):
-        with self.lock:
-            while not self.running:
-                self.condition.wait()
+        with self.stepLock:
+            while self.controller.step<=0:
+                self.stepCondition.wait()
+            print(current_thread().getName(), 'finish waiting')
+            self.controller.decreaseStep()
 class GraphLock:
     __id = 1
     def __init__(self):
@@ -678,6 +699,7 @@ class GraphLock:
     def acquire(self):
         
         self.playController.run()
+        print(current_thread().getName(),' waitLock')
         self.waitLock.acquire()
         #print('\nwait lock ',self.id, current_thread().getName())
         self.isReleased=False
@@ -687,6 +709,8 @@ class GraphLock:
         self.playController.run()
         ###print(current_thread().getName()," have released")
         self.lock.acquire()
+        print(current_thread().getName(),' acquireLock')
+        self.controller.drawFutureLockThread(current_thread(),self)
         ##print('ACQUIRE LOCK ',self.id, current_thread().getName(),'\n')
         sleep(2)
         self.controller.setAcquireThread(current_thread(),self)
@@ -694,7 +718,7 @@ class GraphLock:
     
     def release(self):
         self.playController.run()
-
+        print(current_thread().getName(),' releaseLock')
         self.releaseLock.acquire()
         if current_thread() in self.condionThread:
             self.condionThread.remove(current_thread())
