@@ -7,6 +7,8 @@ class Structure:
     def __init__(self):
         self.lock = GraphLock()
         self.condition = GraphCondition(self.lock)
+        self.condition2 = GraphCondition(self.lock)
+        self.condition3 = GraphCondition(self.lock)
         self.number=3
     
     def minNumber(self):
@@ -48,10 +50,12 @@ t2 = MyThread(structure)
 t3 = MyThread(structure)
 
 test = TestThread(structure)
+test.start()
+
+
 
 t2.start()
 t3.start()
-test.start()
 t1.start()
 
 

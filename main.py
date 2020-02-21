@@ -8,6 +8,8 @@ class Structure:
     def __init__(self):
         self.lock = GraphLock()
         self.condition = GraphCondition(self.lock)
+        self.condition.setName('test')
+        self.lock.setName('test')
     
     def get(self):
         self.lock.acquire()
