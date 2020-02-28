@@ -1,1 +1,6 @@
 Library made by Guido Scarlato.
+
+Initial configuration:
+  
+    -"sudo apt-get install python3-tk" Install TKinter for Python 3
+    -"pip3 install Pillow" Install Pillow
