@@ -807,7 +807,7 @@ class GraphCondition(threading.Condition):
         super().__init__(glock.lock)
         self.glock = glock
         self.controller=controller
-        self.name=str(self.glock.getId())
+        self.name=""
         self.controller.addCondition(self,self.glock)
         
     
