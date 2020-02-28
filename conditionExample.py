@@ -13,15 +13,15 @@ class Structure:
     
     def minNumber(self):
         self.lock.acquire()
-        self.number-=1
+        self.number-=3
         if self.number ==0:
-            self.condition.notifyAll()
+            self.condition2.notify()
         self.lock.release()
     
     def addNumber(self):
         self.lock.acquire()
         while self.number>0:
-            self.condition.wait()
+            self.condition2.wait()
         print('add')
         self.number+=1
         self.lock.release()
@@ -54,9 +54,10 @@ test.start()
 
 
 
+
 t2.start()
-t3.start()
-t1.start()
+#t3.start()
+#t1.start()
 
 
 graphthreading.startGraph()

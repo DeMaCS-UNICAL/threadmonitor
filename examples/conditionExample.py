@@ -20,7 +20,6 @@ class Structure:
         self.lock.acquire()
         while self.number>0:
             self.condition.wait()
-        print('add')
         self.number+=1
         self.lock.release()
 
@@ -40,7 +39,6 @@ class TestThread(GraphThread):
     
     def run(self):
         self.structure.addNumber()
-        print(self.structure.number)
 structure = Structure()
 
 t1 = MyThread(structure)
