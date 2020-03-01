@@ -271,9 +271,10 @@ class Controller:
         self.stopButton = Button(self.primaryCanvas,text='pause',command=self.stop)
         self.nextStepButton = Button(self.primaryCanvas,text='next step',command=self.nextStep,state='disabled')
 
-        self.playButton.place(relx=0.93,rely=0.02)
-        self.stopButton.place(relx=0.93,rely=0.05)
-        self.nextStepButton.place(relx=0.93,rely=0.08)
+        self.playButton.place(relx=0.93,rely=0.02,relheight=0.025)
+        self.stopButton.place(relx=0.93,rely=0.045,relheight=0.025)
+        self.nextStepButton.place(relx=0.93,rely=0.070,relheight=0.025)
+
 
         ### Inizializzazioni immagini ###
         self.imageComputerHeight = 32
