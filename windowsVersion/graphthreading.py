@@ -184,6 +184,7 @@ class Controller:
     def __init__(self,stepLock,stepCondition):
         
         self.window=Tk()
+        self.window.title('graphthreading')
         self.stepLock=stepLock
         self.stepCondition = stepCondition
 
