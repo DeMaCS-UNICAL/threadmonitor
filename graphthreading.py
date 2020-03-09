@@ -230,18 +230,17 @@ class Controller:
         ### Lista di tutti i container creati ###
         self.containers = []
 
-        ### Contiene come chiave gli scroll, e come valore gli oggetti a cui sono attaccati ###
+        ### Lista di tutti gli scroll creati ###
         self.scrolls = []
 
+        ### Lista di tutte le condition create ###
         self.conditions = []
        
-        ### Inizializzazione inactive Frame ###
         
-        #self.inactiveFrame=Frame(self.window,background='#ff1a1a')
-        #self.inactiveFrame.pack(fill=BOTH)
+        
         
 
-        ### Inizializzazione primaryCanvas ###
+        ### Inizializzazione Frame principale ###
 
         self.frame=Frame(self.window,width=self.screen_width,height = self.screen_heigth,background='grey')
         self.frame.pack(fill=BOTH,expand=True)
@@ -253,17 +252,17 @@ class Controller:
         self.primaryCanvas['yscrollcommand']= self.yscroll.set
         self.primaryCanvas.pack(fill=BOTH,expand=True)
 
+        ### Inizializzazione inactive Canvas ###
         self.inactiveCanvas=Canvas(self.primaryCanvas,background='white',highlightthickness=1, highlightbackground="black",height=150,width=self.inactiveWidth)
         changeThreadButton = Button(self.inactiveCanvas,text = "Change thread name", command=self.createPopupThread)
         changeThreadButton.place(relx=0.5,rely=0,anchor='n')
         self.inactiveScroll = ttk.Scrollbar(self.inactiveCanvas,orient=HORIZONTAL,command=self.inactiveCanvas.xview)
         self.inactiveScroll.place(relx=0.5,rely=0.93,width=305,anchor='center')
         self.inactiveCanvas.configure(xscrollcommand=self.inactiveScroll.set)
-        #self.inactiveCanvas.pack(anchor='center',pady=10)
-        self.background = ImageTk.Image.open('resource/background.jpg')
-        self.background = self.background.resize((10000,self.screen_width))
-        self.background = ImageTk.PhotoImage(master=self.primaryCanvas,image=self.background)
-        #self.primaryCanvas.create_image(0,0,image=self.background,anchor='n')
+
+        
+                
+        ### Inizializzazione primaryCanvas ###
 
         self.primaryCanvas.create_window(self.screen_width/2,0,window=self.inactiveCanvas,anchor='n')
 
@@ -282,7 +281,10 @@ class Controller:
         self.computerImage = ImageTk.Image.open('resource/computer.png')
         self.computerImage = self.computerImage.resize((self.imageComputerHeight,self.imageComputerHeight))
         self.computerImage = ImageTk.PhotoImage(master=self.primaryCanvas,image=self.computerImage)
-        
+
+        self.background = ImageTk.Image.open('resource/background.jpg')
+        self.background = self.background.resize((10000,self.screen_width))
+        self.background = ImageTk.PhotoImage(master=self.primaryCanvas,image=self.background)
 
         self.redSem = ImageTk.Image.open('resource/redSem.png')
         self.redSem = self.redSem.resize((15,15))
@@ -302,6 +304,9 @@ class Controller:
         self.inactiveData = _InactiveContainer(self.inactiveCanvas,self.computerImage)
 
     def play(self):
+        """ Function associated with play button """
+
+        ### Cambia lo stato del controller ed esegue una notify per tutti i thread che erano ancora in wait sulla stepCondition ###
         with self.stepLock:
             self.stopButton.configure(state='normal')
             self.nextStepButton.configure(state='disabled')
@@ -313,6 +318,9 @@ class Controller:
             self.stepCondition.notifyAll()
     
     def stop(self):
+        """ Function associated with stop button """
+
+        ### Cambia lo stato del controller, ed aggiorna tutti i lock ###
         self.playButton.configure(state='normal')
         self.nextStepButton.configure(state='normal')
         self.isStopped=True
@@ -321,13 +329,18 @@ class Controller:
             lock.playController.stop()
     
     def nextStep(self):
+        """ Function associated with nextStep button """
+
+        ### Aumenta il valore degli step, e manda una notify alla step condition ###
         with self.stepLock:
             self.step+=1
             self.stepCondition.notifyAll()
     
     def decreaseStep(self):
         self.step-=1
+
     def changeThreadName(self,label,textField,menu,button):
+        """ This method creates the popup window to change thread's name """
         threads={}
         for thread in self.threads:
             threads[thread.getName()]=thread
@@ -342,6 +355,7 @@ class Controller:
 
         
     def createPopupThread(self):
+        """ This method creates the popup window to change thread's name """
         popup = Toplevel()
         popup.title('Change thread name')
         popup.geometry('400x200')
@@ -384,6 +398,8 @@ class Controller:
         lock_label = lock_data[5]
         lock_label.configure(text=name)
     def addLock(self,lock):
+        """ This method creates the graphical representation for the lock """
+
         ### creo il container e lo aggiungo alla lista di container ###
         
         container=Canvas(self.primaryCanvas,background='white',highlightthickness=1, highlightbackground="black",height=self.containerHeight,width=self.containerWidth)
@@ -434,6 +450,7 @@ class Controller:
         self.currentOrientPosition+=1
         
     def addCondition(self,condition,lock):
+        """ This method creates the graphical representation for the condition """
         ### prendo il container principale del lock a cui è associata la condition ###
         container_data = self.lockContainer[lock]
         lock_container=container_data[7]
@@ -454,7 +471,7 @@ class Controller:
         lock_container.create_window(self.containerWidth*(80/100),current_height-(40/100)*self.conditionHeight,window=semCanvas,anchor='n')
         semCanvas.create_image(15,10,image=self.redSem, tag="redSem",anchor='center')
         semCanvas.create_image(15,10,image=self.greySem, tag="greyRedSem",anchor='center')
-        semCanvas.create_text(45,12,text="UNO")
+        semCanvas.create_text(45,12,text="ONE")
 
         semGreenCanvas = Canvas(lock_container,background='#ffc04c',width=60,height=17)
         lock_container.create_window(self.containerWidth*(20/100),current_height-(40/100)*self.conditionHeight,window=semGreenCanvas,anchor='n')
@@ -477,7 +494,13 @@ class Controller:
         lock_data=self.lockContainer[lock]
         conditionContainer = lock_data[2]
         conditionContainer[condition].setConditionLabel(name)
+
     def __moveFromInactiveToWait(self,thread,wait_container,height,orient,tag,lock,startTime):
+        """ 
+        Movement function from inactive to wait 
+
+        Move the thread up to the height of the canvas relative to the lock to be acquired, taking into account the orientation of the canvas 
+        """
        
         if self.primaryCanvas.coords(tag)[1]<=height-(10/100)*self.containerHeight:
             self.primaryCanvas.move('image'+str(thread.ident),0,2)
@@ -509,6 +532,12 @@ class Controller:
                     self.primaryCanvas.delete('image'+str(thread.ident))
 
     def __moveInLock(self,tagImage, tagText,orient,container,lock,thread,tag,alreadyCalled):
+        """ 
+        Movement function in lock canvas 
+
+        Move the thread inside the canvas, to prevent it from starting directly from the outside 
+        """
+
         if orient == controller.SINISTRA:
             if container.coords(tagImage)[0]>0:
                 if container.coords(tagImage)[0]<16:
@@ -526,7 +555,7 @@ class Controller:
             if container.coords(tagImage)[0]<self.containerWidth:
                 if container.coords(tagImage)[0]>self.containerWidth-32:
                     if not alreadyCalled:
-                        self.__moveFromLockToInactive(tag,thread,orient,lock,container)
+                        self.__moveFromLockToInactive(tag,thread,orient,lock,container) ### Quando arriva al bordo parte il secondo movimento, che arriva fino al canvas dei thread inattivi ###
                         alreadyCalled = True
 
                 container.move(tagImage,1,0)
@@ -538,7 +567,8 @@ class Controller:
                 
 
     def __moveFromLockToInactive(self,tag,thread,orient,lock,container):
-        
+        """ Movement function from lock to inactive """
+
         if orient == Controller.SINISTRA and  self.primaryCanvas.coords('inactiveimage'+str(thread.ident))[0]>(5/100)*self.primaryCanvas.winfo_width() and self.primaryCanvas.coords('inactiveimage'+str(thread.ident))[1]>0:
             self.primaryCanvas.move(tag,-1,0)
             self.primaryCanvas.move('inactiveimage'+str(thread.ident),-1,0)
@@ -572,6 +602,13 @@ class Controller:
 
 
     def setWaitThread(self,thread,lock):
+        """ 
+        This function set thread in wait state 
+
+        Create the thread image and start moving towards the lock canvas, after deleting the thread from the inactive canvas
+
+        """
+
         container_data = self.lockContainer[lock]
         wait_data = container_data[1]  
         height = container_data[3]+((30/100)*self.containerHeight)
@@ -586,6 +623,12 @@ class Controller:
         return sleepTime
     
     def setAcquireThread(self,thread,lock):
+        """ 
+        This function set thread in acquire state 
+        
+        Create the image of the thread in the space related to the acquisition of the lock
+        """
+
         container_data = self.lockContainer[lock]
         lock_container = container_data[0]
         tag=str(thread.ident)
@@ -599,6 +642,12 @@ class Controller:
         lock_container.itemconfigure('redSem',state="normal")
     
     def setAcquireThreadFromCondition(self,thread,lock,condition):
+        """ 
+        This function set thread from condition in acquire state 
+        
+        Create the image of the thread in the space related to the acquisition of the lock
+        """
+
         tag=str(thread.ident)
         container_data = self.lockContainer[lock]
         conditionContainer =container_data[2]
@@ -614,6 +663,12 @@ class Controller:
     
 
     def setThreadInCondition(self,thread,lock,condition):
+        """ 
+        This function set thread in waiting condition state 
+
+        Create the thread image in the lock condition canvas 
+
+        """
         container_data = self.lockContainer[lock]
         conditionContainers =container_data[2]
         conditionData = conditionContainers[condition]
@@ -626,6 +681,11 @@ class Controller:
         sleep(2)
 
     def setReleaseThread(self,thread,lock):
+        """ 
+        This function set thread in release state 
+
+        Create the thread image and start moving towards the canvas of inactive locks, after deleting the thread from the lock canvas
+        """
         container_data = self.lockContainer[lock]
         lock_container=container_data[0]
         height = container_data[3]+((50/100)*self.containerHeight)
@@ -654,6 +714,7 @@ class Controller:
         wait_data.drawFutureAcquireThread(thread)
 
     def notifyLock(self,lock,condition,isAll):
+        """ This function start semaphore's blink related to condition """
         container_data = self.lockContainer[lock]
         conditionContainer = container_data[2]
         conditionData = conditionContainer[condition]
@@ -688,6 +749,7 @@ class Controller:
         self.window.after(50,self.update)
     
     def start(self):
+        """ This function draws all the graphic components """
         for key in self.lockContainer.keys():
             containerData=self.lockContainer[key]
             container = containerData[7]
@@ -737,6 +799,7 @@ class _StopAndPlay:
 class GraphLock:
     __id = 1
     def __init__(self):
+        """ Create GraphLock and communicate to graphthreading controller """
         self.id = GraphLock.__id
         GraphLock.__id+=1
         self.controller=controller
@@ -755,8 +818,10 @@ class GraphLock:
         self.playController = _StopAndPlay()
 
     def setName(self,name):
+        """ Set GraphLock name """
         self.controller.setLockName(self,name)
     def acquire(self):
+        """ Acquire GraphLock """
         self.waitLock.acquire()
         self.isReleased=False
         self.playController.run()
@@ -771,6 +836,7 @@ class GraphLock:
         sleep(3)
     
     def release(self):
+        """ Release GraphLock """
         self.releaseLock.acquire()
         if current_thread() in self.condionThread.keys():
             self.controller.setAcquireThreadFromCondition(current_thread(),self,self.condionThread[current_thread()])
@@ -806,6 +872,7 @@ class GraphThread(Thread):
 
 class GraphCondition(threading.Condition):
     def __init__(self,glock):
+        """ Create condition related to GraphLock """
         super().__init__(glock.lock)
         self.glock = glock
         self.controller=controller

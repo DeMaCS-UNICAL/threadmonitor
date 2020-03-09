@@ -453,7 +453,7 @@ class Controller:
         lock_container.create_window(self.containerWidth*(80/100),current_height-(45/100)*self.conditionHeight,window=semCanvas,anchor='n')
         semCanvas.create_image(15,10,image=self.redSem, tag="redSem",anchor='center')
         semCanvas.create_image(15,10,image=self.greySem, tag="greyRedSem",anchor='center')
-        semCanvas.create_text(45,12,text="UNO")
+        semCanvas.create_text(45,12,text="ONE")
 
         semGreenCanvas = Canvas(lock_container,background='#ffc04c',width=60,height=17)
         lock_container.create_window(self.containerWidth*(20/100),current_height-(45/100)*self.conditionHeight,window=semGreenCanvas,anchor='n')
