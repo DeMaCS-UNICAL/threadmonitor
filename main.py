@@ -8,54 +8,37 @@ class Structure:
     def __init__(self):
         self.lock = GraphLock()
         self.condition = GraphCondition(self.lock)
-        self.lock.setName('test')
+        self.lock.setName('lockName')
     
     def get(self):
         self.lock.acquire()
         self.lock.release()
 
-
 class MyThread(GraphThread):
-    def __init__(self,structure,sctructure2,structure3):
+    def __init__(self,structure):
         super().__init__()
         self.structures=structure
-        self.structure2 = sctructure2
-        self.structure3 = structure3
-        
-    
+
     def run(self):
         while True:
             self.structures.get()
-            sleep(5)
-            self.structure2.get()
-            sleep(5)
-            self.structure3.get()
-            sleep(5)
-
-   
-
-
+            
 structure = Structure()
-structure2 = Structure()
-structure3 = Structure()
-
-
-
 threads = []
+lock=GraphLock()
+lock2=GraphLock()
+con = GraphCondition(lock)
 
+lock3=GraphLock()
+con3 = GraphCondition(lock)
+
+lock4=GraphLock()
 for i in range(4):
-    t = MyThread(structure,structure2,structure3)
+    t = MyThread(structure)
     threads.append(t)
-
-    
-    
-
 
 for t in threads:
     t.start()
-
-
-
 
 graphthreading.startGraph()
 

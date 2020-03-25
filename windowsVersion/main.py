@@ -44,7 +44,7 @@ structure3 = Structure()
 threads = []
 
 for i in range(4):
-    t = MyThread(structure,structure2,structure3)
+    t = MyThread(structure3,structure2,structure)
     threads.append(t)
 
     

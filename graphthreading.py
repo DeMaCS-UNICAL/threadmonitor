@@ -194,6 +194,8 @@ class Controller:
         self.window.geometry('{0}x{1}'.format(self.screen_width-self.pad,self.screen_heigth-self.pad))
         self.started = False
         self.step = 0
+        self.startLock=Lock()
+        self.startCondition = Condition(self.startLock)
         ### INIZIALIZZAZIONE LOGICA ###
 
         ### hashMap contenente come chiave il nome del lock, e come valore il relativo canvas ###
@@ -217,6 +219,9 @@ class Controller:
         ### PUNTI DI PARTENZA DEI CONTAINERS ###
         self.currentOrientPosition = 0
         self.currentHeightPosition = 200
+
+        self.currentHeightLeftPosition = 200
+        self.currentHeightRightPosition = 200
         
         self.containerWidth = self.screen_width/5
         self.containerHeight = 200
@@ -608,7 +613,12 @@ class Controller:
         Create the thread image and start moving towards the lock canvas, after deleting the thread from the inactive canvas
 
         """
-
+        if not self.started:
+            self.startLock.acquire()
+            while not self.started:
+                self.startCondition.wait()
+            self.startLock.release()
+            sleep(0.05)
         container_data = self.lockContainer[lock]
         wait_data = container_data[1]  
         height = container_data[3]+((30/100)*self.containerHeight)
@@ -750,18 +760,31 @@ class Controller:
     
     def start(self):
         """ This function draws all the graphic components """
-        for key in self.lockContainer.keys():
-            containerData=self.lockContainer[key]
-            container = containerData[7]
-            currentOrient=containerData[4]
+        try:
+            self.startLock.acquire()
+            for key in self.lockContainer.keys():
+                containerData=self.lockContainer[key]
+                container = containerData[7]
+                currentOrient=containerData[4]
 
-            relX = (20/100)*self.screen_width if currentOrient%2 == 0 else (80/100)*self.screen_width
-            self.primaryCanvas.create_window(relX,self.currentHeightPosition,window=container,anchor='n')
-            containerData[3]=self.currentHeightPosition
-            if(currentOrient%2 != 0):
-                self.currentHeightPosition+=containerData[6]+30
-        self.window.after(50,self.update)
-        self.window.mainloop()
+                relX = (20/100)*self.screen_width if currentOrient%2 == 0 else (80/100)*self.screen_width
+
+                height = self.currentHeightLeftPosition if currentOrient%2 == 0 else self.currentHeightRightPosition
+                self.primaryCanvas.create_window(relX,height,window=container,anchor='n')
+                containerData[3]=height
+                if(currentOrient%2 != 0):
+                    self.currentHeightRightPosition+=containerData[6]+30
+                else:
+                    self.currentHeightLeftPosition+=containerData[6]+30
+            self.window.after(50,self.update)
+            self.started = True
+            
+        except Exception as e:
+            print(e)
+        finally:
+            self.startCondition.notifyAll()
+            self.startLock.release()
+            self.window.mainloop()
 
     def __onclose(self):
         self.window.destroy()
