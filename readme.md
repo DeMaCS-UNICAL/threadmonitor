@@ -66,7 +66,7 @@ pip3 install Pillow
 
 > Start and stop the whole system
 
-> Exceution step by step 
+> Excecution step by step 
 
 
 
