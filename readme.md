@@ -7,8 +7,6 @@ Library made by Guido Scarlato.
 ### Example
 ``` python 
 from graphthreading import Controller,GraphLock,GraphThread,GraphCondition
-from threading import Thread,current_thread
-from time import sleep
 import graphthreading
 
 
