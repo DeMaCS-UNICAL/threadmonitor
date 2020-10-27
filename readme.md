@@ -23,19 +23,19 @@ class Structure:
         self.lock.release()
 
 class MyThread(GraphThread):
-    def __init__(self,structure,sctructure2,structure3):
+    def __init__(self,structure):
         super().__init__()
-        self.structures=structure
+        self.structure=structure
 
     def run(self):
         while True:
-            self.structures.get()
+            self.structure.get()
             
 structure = Structure()
 threads = []
 
 for i in range(4):
-    t = MyThread(structure,structure2,structure3)
+    t = MyThread(structure)
     threads.append(t)
 
 for t in threads:
