@@ -13,9 +13,6 @@ import threading
 import time
 from functools import partial
 
-
-
-
 class ConditionContainer:
     def __init__(self,conditionContainer,image,containerHeight,imageComputerHeight,imageComputerWidth,semCanvas,conditionLabel,semGreenCanvas):
         self.container = conditionContainer
@@ -74,6 +71,7 @@ class ConditionContainer:
             updateCanvas.after(400,self.blinkCondition,startTime,not red,grey)
         else:
             updateCanvas.itemconfigure(grey,state='normal')
+
 class _InactiveContainer:
     def __init__(self,inactiveContainer,image):
         self.container = inactiveContainer
@@ -116,8 +114,6 @@ class _InactiveContainer:
         lock.releaseCondition.notify_all()
         lock.isReleased=True
         lock.releaseLock.release()
-
-
 
 class _WaitContainer:
     def __init__(self,wait_container,image,imageHeight):
@@ -167,8 +163,6 @@ class _WaitContainer:
     def drawFutureAcquireThread(self,thread):
         self.container.itemconfigure('text'+str(thread.ident),fill='#cd5b45')
             
-            
-
 class _modifyLockNameWindow:
     def __init__(self,lock):
         pass
@@ -728,7 +722,8 @@ class Controller:
         self.window.destroy()
         for thread in self.threads:
             thread.exit()
- 
+
+# ???
 stepLock = Lock()
 stepCondition = Condition(stepLock)
 controller = Controller(stepLock,stepCondition)
@@ -757,6 +752,10 @@ class _StopAndPlay:
                 while self.controller.step<=0 and self.controller.isStopped:
                     self.stepCondition.wait()
                 self.controller.decreaseStep()
+
+#
+# lock della libreria
+#
 class GraphLock:
     __id = 1
     def __init__(self):
@@ -816,7 +815,9 @@ class GraphLock:
     def getId(self):
         return self.id
 
-
+#
+# thread della libreria
+#
 class GraphThread(Thread):
     def __init__(self):
         super().__init__()
@@ -826,7 +827,9 @@ class GraphThread(Thread):
     def exit(self):
         os._exit(0)        
         
-
+#
+# condition della libreria
+#
 class GraphCondition(threading.Condition):
     def __init__(self,glock):
         super().__init__(glock.lock)
