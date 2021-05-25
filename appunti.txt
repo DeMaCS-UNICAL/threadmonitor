@@ -1,8 +1,0 @@
-- a cosa serve la variabile IsInWait in Lock?
-- se si fa lock.acquire con blocking=false o con un timeout, come bisogna cambiare le chiamate interne?
-- perchè usare un wait lock e un release lock?
-
-
-TO DO
- aggiungere startGraph nell init del modulo
- eliminare ogni differenza fra logica e std, lasciare metodi extra solo come handle per la view
