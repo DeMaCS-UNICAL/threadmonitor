@@ -6,7 +6,8 @@ Library originally made by Guido Scarlato, forked by Davide Caligiuri.
 
 ### Example
 ``` python 
-# replace with a threading import to obtain a perfectly valid multithreading code!
+# to obtain a perfectly valid multithreading code, replace with:
+# from threading import Lock, Thread, Condition
 from tm_graph.logic.graph_logic import Lock, Thread, Condition
 from tm_graph.view.graph_view import startGraph
 
