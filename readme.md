@@ -22,7 +22,7 @@ class Structure:
 class MyThread(GraphThread):
     def __init__(self,structure):
         super().__init__()
-        self.structure=structure
+        self.structure = structure
 
     def run(self):
         while True:
@@ -54,7 +54,7 @@ startGraph()
 pipenv install 
 ```
 
-> manually installation:
+> manual installation:
 
 ```shell
 sudo apt-get install python3-tk
