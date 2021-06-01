@@ -1,4 +1,4 @@
-Library made by Guido Scarlato.
+Library originally made by Guido Scarlato, forked by Davide Caligiuri.
 
 # GraphThreading
 
@@ -6,15 +6,14 @@ Library made by Guido Scarlato.
 
 ### Example
 ``` python 
-from graphthreading import Controller,GraphLock,GraphThread,GraphCondition
-import graphthreading
-
+# replace with a threading import to obtain a perfectly valid multithreading code!
+from tm_graph.logic.graph_logic import Lock, Thread, Condition
+from tm_graph.view.graph_view import startGraph
 
 class Structure:
     def __init__(self):
-        self.lock = GraphLock()
-        self.condition = GraphCondition(self.lock)
-        self.lock.setName('lockName')
+        self.lock = Lock()
+        self.condition = Condition(self.lock)
     
     def get(self):
         self.lock.acquire()
@@ -39,23 +38,28 @@ for i in range(4):
 for t in threads:
     t.start()
 
-graphthreading.startGraph()
+startGraph()
 ```
 
 ---
 ### Clone
 
-- Clone this repo to your local machine using `https://github.com/guidoscarl/threadmonitor.git`
+- Clone this repo to your local machine using `https://github.com/Dygwah98/threadmonitor`
 ---
 ### Setup
 
-> install python packages
+> using pipenv:
+
+```shell
+pipenv install 
+```
+
+> manually installation:
 
 ```shell
 sudo apt-get install python3-tk
 pip3 install Pillow 
 ```
-
 
 ---
 
@@ -66,6 +70,4 @@ pip3 install Pillow
 
 > Excecution step by step 
 
-
-
-
+> Seamless integration with the existing threading module

@@ -2,13 +2,14 @@
 
 from tkinter import ttk
 from tkinter import *
+import tm_graph.logic.graph_logic as tm_logic
 from PIL import ImageTk
 import threading
 import time
 from functools import partial
 
 class ConditionContainer:
-    def __init__(self,conditionContainer,image,containerHeight,imageComputerHeight,imageComputerWidth,semCanvas,conditionLabel,semGreenCanvas):
+    def __init__( self, conditionContainer, image, containerHeight, imageComputerHeight, imageComputerWidth, semCanvas, conditionLabel, semGreenCanvas ):
         self.container = conditionContainer
         self.lock = threading.Lock()
         self.conditionThreads = []
@@ -19,17 +20,17 @@ class ConditionContainer:
         self.imageComputerWidth = imageComputerWidth
         self.semCanvas = semCanvas
         self.conditionLabel = conditionLabel
-        self.semGreenCanvas=semGreenCanvas
+        self.semGreenCanvas = semGreenCanvas
 
-    def setConditionLabel(self,name):
-        self.conditionLabel.configure(text=name)
+    def setConditionLabel( self, name ):
+        self.conditionLabel.configure( text = name )
 
-    def addThreadInCondition(self,thread):
+    def addThreadInCondition( self, thread ):
         with self.lock:
             self.conditionThreads.append(thread)
             self.drawNewThread(thread)
 
-    def removeThreadInCondition(self,threadObject):
+    def removeThreadInCondition( self, threadObject ):
         with self.lock:
             if threadObject in self.conditionThreads:
                 for thread in self.conditionThreads:
@@ -109,7 +110,7 @@ class _InactiveContainer:
         lock.releaseLock.release()
 
 class _WaitContainer:
-    def __init__(self,wait_container,image,imageHeight):
+    def __init__(self, wait_container: Canvas, image, imageHeight ):
         self.container = wait_container
         self.lock = threading.Lock()
         self.waitThreads = []
@@ -117,67 +118,67 @@ class _WaitContainer:
         self.image = image
         self.imageHeight = imageHeight
     
-    def addThreadInWait(self,thread,lock):
+    def addThreadInWait(self,thread,lock) -> None:
         with self.lock:
             self.waitThreads.append(thread)
             self.drawNewThread(thread)
-            lock.canAquire=True
+            lock.canAquire = True
 
-    def removeThreadInWait(self,threadObject):
+    def removeThreadInWait( self, threadObject ) -> None:
         with self.lock:
             for thread in self.waitThreads:
                 tag = str(thread.ident)
-                self.container.delete('text'+tag)
-                
-                self.container.delete('image'+str(thread.ident))
+                self.container.delete( f"text{tag}" )
+                self.container.delete( f"image{ str(thread.ident) }" )
 
             self.waitThreads.remove(threadObject)
             self.redrawThread()
     
-    def redrawThread(self):
+    def redrawThread( self ) -> None:
         currentHeight = 0
         
         for thread in self.waitThreads:
+        
             tag=str(thread.ident)
-            self.container.create_image(int(self.container.winfo_width()/2),currentHeight,image=self.image,tag='image'+tag,anchor='n')
-            currentHeight+=1.2*self.imageHeight
-            self.container.create_text(int(self.container.winfo_width()/2),currentHeight,text=thread.getName(),tag='text'+tag,anchor="n")
-            currentHeight+=0.5*self.imageHeight
-        self.currentHeight=currentHeight
+            currentWidth = int(self.container.winfo_width()/2)
+            self.container.create_image(currentWidth, currentHeight, image = self.image, tag = 'image'+tag, anchor = 'n' )
+            currentHeight += 1.2*self.imageHeight
+            self.container.create_text(currentWidth, currentHeight, text = thread.getName(), tag = 'text'+tag, anchor = "n" )
+            currentHeight += 0.5*self.imageHeight
+        
+        self.currentHeight = currentHeight
     
-    def drawNewThread(self,thread):
+    def drawNewThread( self, thread ) -> None:
         tag = str(thread.ident)
-        self.container.create_image(int(self.container.winfo_width()/2),self.currentHeight,image=self.image,tag='image'+tag,anchor='n')
+        currentWidth = int(self.container.winfo_width()/2)
+        self.container.create_image( currentWidth, self.currentHeight, image = self.image, tag = 'image'+tag, anchor = 'n' )
         self.currentHeight+=1.2*self.imageHeight
-        self.container.create_text(int(self.container.winfo_width()/2),self.currentHeight,text=thread.getName(),tag='text'+tag,anchor="n")
+        self.container.create_text( currentWidth, self.currentHeight, text = thread.getName(), tag = 'text'+tag, anchor = "n" )
         self.currentHeight +=0.5*self.imageHeight
 
-    def drawFutureAcquireThread(self,thread):
-        self.container.itemconfigure('text'+str(thread.ident),fill='#cd5b45')
+    def drawFutureAcquireThread( self, thread ) -> None:
+        self.container.itemconfigure( f"text{ str(thread.ident) }", fill='#cd5b45' )
             
-class _modifyLockNameWindow:
-    def __init__(self,lock):
-        pass
-
 class Controller:
-    FINISH=False
+    
+    FINISH = False
     DESTRA = 1
     SINISTRA = 0
     INDEX_WAIT_CONTAINER = 1
     INDEX_LOCK_CONTAINER = 1
     isStopped = False
     
-    def __init__(self,stepLock,stepCondition):
+    def __init__(self, stepLock: threading.Lock, stepCondition: threading.Condition):
         
-        self.window=Tk()
+        self.window = Tk()
         self.window.title('graphthreading')
-        self.stepLock= stepLock
+        self.stepLock = stepLock
         self.stepCondition = stepCondition
 
-        self.screen_width=self.window.winfo_screenwidth()
-        self.screen_heigth=self.window.winfo_screenheight()
+        self.screen_width = self.window.winfo_screenwidth()
+        self.screen_heigth = self.window.winfo_screenheight()
         self.pad = 3
-        self.window.geometry('{0}x{1}'.format(self.screen_width-self.pad,self.screen_heigth-self.pad))
+        self.window.geometry( '{0}x{1}'.format( self.screen_width-self.pad, self.screen_heigth-self.pad ) )
         self.started = False
         self.step = 0
         self.startLock = threading.Lock()
@@ -185,7 +186,7 @@ class Controller:
         ### INIZIALIZZAZIONE LOGICA ###
 
         ### hashMap contenente come chiave il nome del lock, e come valore il relativo canvas ###
-        self.lockContainer={}
+        self.lockContainer = {}
         
         ### In quale container è conenuto al momento il thread ###
         self.threadContainer = {}
@@ -197,7 +198,7 @@ class Controller:
         self.threads = []
 
         ### Lista dei thread inattivi ###
-        self.inactiveThread=[]
+        self.inactiveThread = []
 
         ### Lista dei thread in wait su un determinato lock ###
         self.waitThread = {}
@@ -211,7 +212,7 @@ class Controller:
         
         self.containerWidth = self.screen_width/5
         self.containerHeight = 200
-        self.conditionHeight=(40/100)*self.containerHeight
+        self.conditionHeight = (40/100)*self.containerHeight
         self.waitHeight = (30/100)*self.containerHeight
         self.lockHeight = (70/100)*self.containerHeight
         self.inactiveWidth = 500
@@ -233,141 +234,140 @@ class Controller:
         
         ### Inizializzazione primaryCanvas ###
 
-        self.frame=Frame(self.window,width=self.screen_width,height = self.screen_heigth,background='grey')
-        self.frame.pack(fill=BOTH,expand=True)
-        self.primaryCanvas=Canvas(self.frame,background='#A0A0A0',highlightthickness=0, highlightbackground="black",height=10000,width=self.screen_width)
+        self.frame = Frame( self.window, width = self.screen_width, height = self.screen_heigth, background = 'grey' )
+        self.frame.pack( fill = BOTH, expand = True )
+        self.primaryCanvas = Canvas( self.frame, background = '#A0A0A0', highlightthickness = 0, highlightbackground = "black", height = 10000, width = self.screen_width )
         self.window.update_idletasks()
-        self.yscroll = Scrollbar(self.frame, orient=VERTICAL)
-        self.yscroll['command']= self.primaryCanvas.yview
-        self.yscroll.pack(side=RIGHT,fill=Y)
-        self.primaryCanvas['yscrollcommand']= self.yscroll.set
-        self.primaryCanvas.pack(fill=BOTH,expand=True)
+        self.yscroll = Scrollbar( self.frame, orient = VERTICAL )
+        self.yscroll['command'] = self.primaryCanvas.yview
+        self.yscroll.pack( side = RIGHT, fill = Y )
+        self.primaryCanvas['yscrollcommand'] = self.yscroll.set
+        self.primaryCanvas.pack( fill = BOTH, expand = True )
 
-        self.inactiveCanvas=Canvas(self.primaryCanvas,background='white',highlightthickness=1, highlightbackground="black",height=150,width=self.inactiveWidth)
-        changeThreadButton = Button(self.inactiveCanvas,text = "Change thread name", command=self.createPopupThread)
-        changeThreadButton.place(relx=0.5,rely=0,anchor='n')
-        self.inactiveScroll = ttk.Scrollbar(self.inactiveCanvas,orient=HORIZONTAL,command=self.inactiveCanvas.xview)
-        self.inactiveScroll.place(relx=0.5,rely=0.93,width=305,anchor='center')
-        self.inactiveCanvas.configure(xscrollcommand=self.inactiveScroll.set)
+        self.inactiveCanvas = Canvas( self.primaryCanvas, background = 'white', highlightthickness = 1, highlightbackground = "black", height = 150, width = self.inactiveWidth )
+        changeThreadButton = Button( self.inactiveCanvas, text = "Change thread name", command = self.createPopupThread )
+        changeThreadButton.place( relx = 0.5, rely = 0, anchor = 'n' )
+        self.inactiveScroll = ttk.Scrollbar( self.inactiveCanvas, orient = HORIZONTAL, command = self.inactiveCanvas.xview )
+        self.inactiveScroll.place( relx = 0.5, rely = 0.93, width = 305, anchor = 'center' )
+        self.inactiveCanvas.configure( xscrollcommand = self.inactiveScroll.set )
         #self.inactiveCanvas.pack(anchor='center',pady=10)
-        self.background = ImageTk.Image.open('resource/background.jpg')
-        self.background = self.background.resize((10000,self.screen_width))
-        self.background = ImageTk.PhotoImage(master=self.primaryCanvas,image=self.background)
+        self.background = ImageTk.Image.open( 'resource/background.jpg' )
+        self.background = self.background.resize( (10000, self.screen_width) )
+        self.background = ImageTk.PhotoImage( master = self.primaryCanvas, image = self.background )
         #self.primaryCanvas.create_image(0,0,image=self.background,anchor='n')
 
-        self.primaryCanvas.create_window(self.screen_width/2,0,window=self.inactiveCanvas,anchor='n')
+        self.primaryCanvas.create_window( self.screen_width/2, 0, window = self.inactiveCanvas, anchor = 'n' )
 
-        self.playButton = Button(self.primaryCanvas,text='play',command=self.play)
-        self.stopButton = Button(self.primaryCanvas,text='pause',command=self.stop)
-        self.nextStepButton = Button(self.primaryCanvas,text='next step',command=self.nextStep,state='disabled')
+        self.playButton = Button( self.primaryCanvas, text = 'play', command = self.play )
+        self.stopButton = Button( self.primaryCanvas, text = 'pause', command = self.stop )
+        self.nextStepButton = Button( self.primaryCanvas, text = 'next step', command = self.nextStep, state = 'disabled' )
 
-        self.playButton.place(relx=0.93,rely=0.02,relheight=0.025)
-        self.stopButton.place(relx=0.93,rely=0.045,relheight=0.025)
-        self.nextStepButton.place(relx=0.93,rely=0.070,relheight=0.025)
+        self.playButton.place( relx = 0.93, rely = 0.02, relheight = 0.025 )
+        self.stopButton.place( relx = 0.93, rely = 0.045, relheight = 0.025 )
+        self.nextStepButton.place( relx = 0.93, rely = 0.070, relheight = 0.025 )
 
         ### Inizializzazioni immagini ###
         self.imageComputerHeight = 32
         self.imageComputerWidth = 32
-        self.computerImage = ImageTk.Image.open('resource/computer.png')
-        self.computerImage = self.computerImage.resize((self.imageComputerHeight,self.imageComputerHeight))
-        self.computerImage = ImageTk.PhotoImage(master=self.primaryCanvas,image=self.computerImage)
+        self.computerImage = ImageTk.Image.open( 'resource/computer.png' )
+        self.computerImage = self.computerImage.resize( (self.imageComputerHeight, self.imageComputerHeight) )
+        self.computerImage = ImageTk.PhotoImage( master = self.primaryCanvas, image = self.computerImage )
         
+        self.redSem = ImageTk.Image.open( 'resource/redSem.png' )
+        self.redSem = self.redSem.resize( (15, 15) )
+        self.redSem = ImageTk.PhotoImage( master = self.primaryCanvas, image = self.redSem )
 
-        self.redSem = ImageTk.Image.open('resource/redSem.png')
-        self.redSem = self.redSem.resize((15,15))
-        self.redSem = ImageTk.PhotoImage(master=self.primaryCanvas,image=self.redSem)
+        self.greenSem = ImageTk.Image.open( 'resource/greenSem.png' )
+        self.greenSem = self.greenSem.resize( (15, 15) )
+        self.greenSem = ImageTk.PhotoImage( master = self.primaryCanvas, image = self.greenSem )
 
-        self.greenSem = ImageTk.Image.open('resource/greenSem.png')
-        self.greenSem = self.greenSem.resize((15,15))
-        self.greenSem = ImageTk.PhotoImage(master=self.primaryCanvas,image=self.greenSem)
-
-        self.greySem = ImageTk.Image.open('resource/greySem.png')
-        self.greySem = self.greySem.resize((15,15))
-        self.greySem = ImageTk.PhotoImage(master=self.primaryCanvas,image=self.greySem)
+        self.greySem = ImageTk.Image.open( 'resource/greySem.png' )
+        self.greySem = self.greySem.resize( (15, 15) )
+        self.greySem = ImageTk.PhotoImage( master = self.primaryCanvas, image = self.greySem )
        
-        self.window.after(50,self.update)
-        self.window.protocol('WM_DELETE_WINDOW',self.__onclose)
+        self.window.after( 50,self.update )
+        self.window.protocol( 'WM_DELETE_WINDOW', self.__onclose )
         
-        self.inactiveData = _InactiveContainer(self.inactiveCanvas,self.computerImage)
+        self.inactiveData = _InactiveContainer( self.inactiveCanvas, self.computerImage )
 
     def play(self):
         with self.stepLock:
-            self.stopButton.configure(state='normal')
-            self.nextStepButton.configure(state='disabled')
-            self.isStopped=False
-            self.primaryCanvas.configure(background='#A0A0A0')
+            self.stopButton.configure( state = 'normal' )
+            self.nextStepButton.configure( state = 'disabled' )
+            self.isStopped = False
+            self.primaryCanvas.configure( background = '#A0A0A0' )
             for lock in self.lockContainer.keys():
                 lock.playController.play()
-            self.step=0          
+            self.step = 0          
             self.stepCondition.notifyAll()
     
     def stop(self):
-        self.playButton.configure(state='normal')
-        self.nextStepButton.configure(state='normal')
-        self.isStopped=True
-        self.primaryCanvas.configure(background='#696969')
+        self.playButton.configure( state = 'normal' )
+        self.nextStepButton.configure( state = 'normal' )
+        self.isStopped = True
+        self.primaryCanvas.configure( background = '#696969' )
         for lock in self.lockContainer.keys():
             lock.playController.stop()
     
     def nextStep(self):
         with self.stepLock:
-            self.step+=1
+            self.step += 1
             self.stepCondition.notifyAll()
     
     def decreaseStep(self):
-        self.step-=1
+        self.step -= 1
 
-    def changeThreadName(self,label,textField,menu,button):
-        threads={}
+    def changeThreadName( self, label, textField, menu, button ):
+        threads = {}
         for thread in self.threads:
-            threads[thread.getName()]=thread
-        threads[label['text']].name=textField.get('1.0','end-1c')
-        label.configure(text='Name modified!')
-        menu.delete(0,len(self.threads)-1)
+            threads[ thread.getName() ] = thread
+        threads[ label['text'] ].name = textField.get( '1.0', 'end-1c' )
+        label.configure( text = 'Name modified!' )
+        menu.delete(0, len(self.threads)-1 )
         for thread in self.threads:
-            calling_data = partial(self.setLabel,label,thread.getName(),textField,button)
-            menu.add_command(label=thread.getName(),command= calling_data)
-        button.configure(state='disabled')
-        textField.configure(state='disabled')
+            calling_data = partial( self.setLabel, label, thread.getName(), textField, button )
+            menu.add_command( label = thread.getName(), command = calling_data )
+        button.configure( state = 'disabled' )
+        textField.configure( state = 'disabled' )
         
-    def createPopupThread(self):
+    def createPopupThread( self ):
         popup = Toplevel()
-        popup.title('Change thread name')
-        popup.geometry('400x200')
-        menu = Menu(popup)
-        popup.config(menu=menu)
-        threadBar = Menu(menu,tearoff=0)
-        label=Label(popup,text='')
-        label.place(rely=0.25,relx=0.5,anchor='n')
-        textField = Text(popup,state='disabled')
-        textField.place(relx=0.5,rely=0.40,relheight=0.2,relwidth=0.5,anchor='n')
-        changeThreadNameData=partial(self.changeThreadName,label,textField,threadBar)      
-        button = Button(popup,text='Change name')
-        changeThreadNameData=partial(self.changeThreadName,label,textField,threadBar,button)
-        button.configure(command= changeThreadNameData)
-        button.place(relx=0.5,rely=1,anchor='s')
+        popup.title( 'Change thread name' )
+        popup.geometry( '400x200' )
+        menu = Menu( popup )
+        popup.config( menu = menu )
+        threadBar = Menu( menu, tearoff = 0 )
+        label=Label( popup, text = '' )
+        label.place( rely = 0.25, relx = 0.5, anchor = 'n' )
+        textField = Text( popup, state='disabled' )
+        textField.place( relx = 0.5, rely = 0.40, relheight = 0.2, relwidth = 0.5, anchor = 'n' )
+        changeThreadNameData = partial( self.changeThreadName, label, textField, threadBar )      
+        button = Button( popup, text = 'Change name' )
+        changeThreadNameData = partial( self.changeThreadName, label, textField, threadBar, button )
+        button.configure( command = changeThreadNameData )
+        button.place( relx = 0.5, rely = 1, anchor = 's' )
         for thread in self.threads:
-            calling_data = partial(self.setLabel,label,thread.getName(),textField,button)
-            threadBar.add_command(label=thread.getName(),command= calling_data)
-        menu.add_cascade(label='Select thread',menu=threadBar)       
+            calling_data = partial( self.setLabel, label, thread.getName(), textField, button )
+            threadBar.add_command( label = thread.getName(), command = calling_data )
+        menu.add_cascade( label = 'Select thread', menu = threadBar )       
         popup.mainloop()
 
-    def setLabel(self,label,text,textField,button):
-        label.configure(text=text)
-        textField.configure(state="normal")
-        button.configure(state="normal")
+    def setLabel( self, label, text, textField, button ):
+        label.configure( text = text )
+        textField.configure( state = "normal" )
+        button.configure( state = "normal" )
 
-    def createPopupLock(self,label):
+    def createPopupLock( self, label ):
         popup = Toplevel()
-        popup.title(label['text'])
-        popup.geometry('400x100')
-        textField = Text(popup)
-        textField.place(relx=0,rely=0,relheight=0.5,relwidth=1)
-        button = Button(popup,text='Change name',command= lambda: (label.configure(text=textField.get('1.0','end-1c'))))
-        button.place(relx=0.5,rely=1,anchor='s')
+        popup.title( label['text'] )
+        popup.geometry( '400x100' )
+        textField = Text( popup )
+        textField.place( relx = 0, rely = 0, relheight = 0.5, relwidth = 1 )
+        button = Button( popup, text = 'Change name', command = lambda: ( label.configure( text = textField.get('1.0','end-1c') ) ) )
+        button.place( relx = 0.5, rely = 1, anchor = 's' )
         popup.mainloop()
 
-    def addThread(self,thread):
+    def addThread( self, thread ):
         self.threads.append(thread)
 
     def setLockName(self,lock,name):
@@ -378,13 +378,10 @@ class Controller:
     def addLock(self,lock):
         ### creo il container e lo aggiungo alla lista di container ###
         
-        container=Canvas(self.primaryCanvas,background='white',highlightthickness=1, highlightbackground="black",height=self.containerHeight,width=self.containerWidth)
-        
-        
+        container = Canvas(self.primaryCanvas,background='white',highlightthickness=1, highlightbackground="black",height=self.containerHeight,width=self.containerWidth)
+                
         self.containers.append(container)
 
-        
-        
         ### creo il container che mostra il thread che ha acquisito il lok ###
         lock_container = Canvas(container,background='white',width = self.containerWidth, height=self.lockHeight)
         lockLabel = Label(lock_container,text = 'Lock '+str(lock.getId()))
@@ -392,7 +389,7 @@ class Controller:
         container.create_window(self.containerWidth/2,(30/100)*self.containerHeight,window=lock_container,anchor='n')
         
         ### creo il container che mostra i thread in wait ###
-        waitContainer= Canvas(container,background='#fff7dc',highlightthickness=1, highlightbackground="black",width=self.containerWidth,height=self.waitHeight)
+        waitContainer = Canvas(container,background='#fff7dc',highlightthickness=1, highlightbackground="black",width=self.containerWidth,height=self.waitHeight)
         container.create_window(self.containerWidth/2,(0/100)*self.containerHeight,window=waitContainer,anchor='n')#.place(relx=0.5,anchor='center',rely=0.25, relheight=0.50,relwidth=1)
         waitLabel = Label(waitContainer,text='Wait threads')
         waitLabel.place(relx=0,rely=0,anchor='nw')
@@ -405,18 +402,14 @@ class Controller:
         lock_container.create_image(self.containerWidth*(90/100),self.containerHeight*(60/100),image=self.greenSem, tag="greenSem")
         lock_container.create_image(self.containerWidth*(90/100),self.containerHeight*(60/100),image=self.greySem, tag="greyGreenSem",state="hidden")
 
-
-        
-        
         ### creo lo scroll del canvas per i thread in wait ###
         scroll = Scrollbar(waitContainer,orient=VERTICAL,command=waitContainer.yview)
         scroll.place(relx=1,rely=0.5,relheight=1,anchor='e')
         waitContainer.configure(yscrollcommand=scroll.set)
         self.scrolls.append(scroll)
         
-        wait_data = _WaitContainer(waitContainer,self.computerImage,self.imageComputerHeight)
+        wait_data = _WaitContainer(waitContainer, self.computerImage, self.imageComputerHeight)
 
-        
         ### associo al lock i relativi container ###
         conditionContainers = {}
         currentHeightCanvas = self.containerHeight
@@ -470,36 +463,39 @@ class Controller:
         conditionContainer = lock_data[2]
         conditionContainer[condition].setConditionLabel(name)
 
-    def __moveFromInactiveToWait(self,thread,wait_container,height,orient,tag,lock,startTime):
+    def __moveFromInactiveToWait( self, thread, wait_container, height, orient, tag, lock, startTime ):
        
-        if self.primaryCanvas.coords(tag)[1]<=height-(10/100)*self.containerHeight:
-            self.primaryCanvas.move('image'+str(thread.ident),0,2)
-            self.primaryCanvas.move(tag,0,2)
-            self.primaryCanvas.after(6,self.__moveFromInactiveToWait,thread,wait_container,height,orient,tag,lock,startTime)
+        if self.primaryCanvas.coords(tag)[1] <= height-(10/100)*self.containerHeight :
+            
+            self.primaryCanvas.move( f"image{ str(thread.ident) }", 0, 2 )
+            self.primaryCanvas.move( tag, 0, 2 )
+            self.primaryCanvas.after( 6, self.__moveFromInactiveToWait, thread, wait_container, height, orient, tag, lock, startTime )
 
-                
         else:
             if orient == Controller.SINISTRA:
-                if self.primaryCanvas.coords(tag)[0]>=((30/100)*self.primaryCanvas.winfo_width()):
-                    self.primaryCanvas.move(tag,-2,0)
-                    self.primaryCanvas.move('image'+str(thread.ident),-2,0)
-                    self.primaryCanvas.after(10,self.__moveFromInactiveToWait,thread,wait_container,height,orient,tag,lock,startTime)
+                if self.primaryCanvas.coords(tag)[0] >= ( (30/100)*self.primaryCanvas.winfo_width() ):
+                    
+                    self.primaryCanvas.move( tag, -2, 0 )
+                    self.primaryCanvas.move( f"image{ str(thread.ident) }", -2, 0 )
+                    self.primaryCanvas.after( 10, self.__moveFromInactiveToWait, thread, wait_container, height, orient, tag, lock, startTime )
+                
                 else:
-                    wait_container.addThreadInWait(thread,lock)
+                    wait_container.addThreadInWait( thread, lock )
                     self.primaryCanvas.delete(tag)
-                    self.primaryCanvas.delete('image'+str(thread.ident))
-
-
+                    self.primaryCanvas.delete( f"image{ str(thread.ident) }" )
+            
             else:
-                if self.primaryCanvas.coords(tag)[0]<=((70/100)*self.primaryCanvas.winfo_width()):
-                    self.primaryCanvas.move(tag,2,0)
-                    self.primaryCanvas.move('image'+str(thread.ident),2,0)
-                    self.primaryCanvas.after(10,self.__moveFromInactiveToWait,thread,wait_container,height,orient,tag,lock,startTime)
+                if self.primaryCanvas.coords(tag)[0] <= ( (70/100)*self.primaryCanvas.winfo_width() ):
+            
+                    self.primaryCanvas.move( tag, 2, 0 )
+                    self.primaryCanvas.move( f"image{ str(thread.ident) }", 2, 0 )
+                    self.primaryCanvas.after( 10, self.__moveFromInactiveToWait, thread, wait_container, height, orient, tag, lock, startTime )
+            
                 else:
-                    wait_container.addThreadInWait(thread,lock)
-                    lock.canAcquire=True
-                    self.primaryCanvas.delete(tag)
-                    self.primaryCanvas.delete('image'+str(thread.ident))
+                    wait_container.addThreadInWait( thread, lock )
+                    lock.canAcquire = True
+                    self.primaryCanvas.delete( tag )
+                    self.primaryCanvas.delete( f"image{ str(thread.ident) }" )
 
     def __moveInLock(self,tagImage, tagText,orient,container,lock,thread,tag,alreadyCalled):
         if orient == controller.SINISTRA:
@@ -562,8 +558,8 @@ class Controller:
                     container.itemconfigure('greyRedSem',state='normal')         
                     container.itemconfigure('greyGreenSem',state="hidden")
 
-    def setWaitThread(self,thread,lock):
-        # ???
+    def setWaitThread( self, thread, lock ) -> float:
+        
         if not self.started:
             self.startLock.acquire()
             while not self.started:
@@ -572,83 +568,100 @@ class Controller:
             time.sleep(0.05)
         
         container_data = self.lockContainer[lock]
+        
+        tag_param = "wait{0}{1}".format( str(thread.ident), str(lock.getId()) )
+        val_x = int( self.primaryCanvas.winfo_width()/2 )
+        anchor_param = 'n'
+        
+        self.primaryCanvas.create_text( val_x, (105/100)*self.imageComputerHeight, text = thread.getName(), tag = tag_param, anchor = anchor_param )
+        self.primaryCanvas.create_image( val_x, 0, image = self.computerImage, tag = f"image{ str(thread.ident) }", anchor = anchor_param )
+        
         wait_data = container_data[1]  
-        height = container_data[3]+((30/100)*self.containerHeight)
+        height = container_data[3] + ((30/100)*self.containerHeight)
         orient = container_data[4]
-        tag="wait"+str(thread.ident)+str(lock.getId())
-        self.primaryCanvas.create_text(int(self.primaryCanvas.winfo_width()/2),(105/100)*self.imageComputerHeight,text=thread.getName(),tag=tag,anchor="n")
-        self.primaryCanvas.create_image(int(self.primaryCanvas.winfo_width()/2),0,image=self.computerImage,tag='image'+str(thread.ident),anchor='n')
+
         timeStart = time.time()
-        self.__moveFromInactiveToWait(thread,wait_data,height,orient,tag,lock,timeStart)
+        self.__moveFromInactiveToWait( thread, wait_data, height, orient, tag_param, lock, timeStart )
         self.inactiveData.removeThreadInactive(thread)
-        sleepTime = (height+(self.primaryCanvas.winfo_width()/2)-((30/100)*self.primaryCanvas.winfo_width()))/100 
+        
+        sleepTime = ( height + ( self.primaryCanvas.winfo_width()/2 ) - ( (30/100)*self.primaryCanvas.winfo_width() ) )/100 
         return sleepTime
     
-    def setAcquireThread(self,thread,lock):
+    def setAcquireThread( self, thread, lock ):
+        
         container_data = self.lockContainer[lock]
+        
         lock_container = container_data[0]
-        tag=str(thread.ident)
+        tag  = str( thread.ident )
         wait_container = container_data[1]
-        wait_container.removeThreadInWait(thread)
+        
+        wait_container.removeThreadInWait( thread )
+        
         imageHeight = (25/100)*self.lockHeight
-        lock_container.create_image((50/100)*self.containerWidth,imageHeight,tag = 'acquireImage'+tag,image=self.computerImage,anchor='n')
-        lock_container.create_text((50/100)*self.containerWidth,imageHeight+(1.2*self.imageComputerHeight),text=thread.getName(),tag='text'+tag,anchor='n',fill='green')
-        lock_container.itemconfigure('greyGreenSem',state="normal")
-        lock_container.itemconfigure('greyRedSem',state="hidden")
-        lock_container.itemconfigure('redSem',state="normal")
+        imageWidth = (50/100)*self.containerWidth
+
+        lock_container.create_image( imageWidth, imageHeight, tag = 'acquireImage'+tag, image = self.computerImage, anchor = 'n' )
+        lock_container.create_text( imageWidth, imageHeight + ( 1.2*self.imageComputerHeight ), text = thread.getName(), tag = 'text' + tag, anchor = 'n', fill = 'green' )
+        lock_container.itemconfigure( 'greyGreenSem', state = "normal" )
+        lock_container.itemconfigure( 'greyRedSem', state = "hidden" )
+        lock_container.itemconfigure( 'redSem', state = "normal" )
     
-    def setAcquireThreadFromCondition(self,thread,lock,condition):
-        tag=str(thread.ident)
+    def setAcquireThreadFromCondition( self, thread, lock, condition ):
+        tag = str( thread.ident )
         container_data = self.lockContainer[lock]
-        conditionContainer =container_data[2]
+        conditionContainer = container_data[2]
         conditionData = conditionContainer[condition]
         conditionData.removeThreadInCondition(thread)
         imageHeight = (25/100)*self.lockHeight
+        imageWidth = (50/100)*self.containerWidth
         lock_container = container_data[0]
-        lock_container.create_image((50/100)*self.containerWidth,imageHeight,tag = 'acquireImage'+tag,image=self.computerImage,anchor='n')
-        lock_container.create_text((50/100)*self.containerWidth,imageHeight+(1.2*self.imageComputerHeight),text=thread.getName(),tag='text'+tag,anchor='n',fill='green')
-        lock_container.itemconfigure('greyGreenSem',state="normal")
-        lock_container.itemconfigure('greyRedSem',state="hidden")
-        lock_container.itemconfigure('redSem',state="normal")
+        lock_container.create_image( imageWidth, imageHeight, tag = 'acquireImage' + tag, image = self.computerImage, anchor = 'n' )
+        lock_container.create_text( imageWidth, imageHeight + (1.2*self.imageComputerHeight), text = thread.getName(), tag = 'text' + tag, anchor = 'n', fill = 'green' )
+        lock_container.itemconfigure( 'greyGreenSem', state = "normal" )
+        lock_container.itemconfigure( 'greyRedSem', state = "hidden" )
+        lock_container.itemconfigure( 'redSem', state = "normal" )
 
-    def setThreadInCondition(self,thread,lock,condition):
+    def setThreadInCondition( self, thread, lock, condition ):
         container_data = self.lockContainer[lock]
-        conditionContainers =container_data[2]
+        conditionContainers = container_data[2]
         conditionData = conditionContainers[condition]
         conditionData.addThreadInCondition(thread)
-        lock_container=container_data[0]
-        lock_container.delete('text'+str(thread.ident))
-        lock_container.delete('acquireImage'+str(thread.ident))
-        lock_container.itemconfigure('greyRedSem',state='normal')         
-        lock_container.itemconfigure('greyGreenSem',state="hidden")
+        lock_container = container_data[0]
+        lock_container.delete( 'text' + str(thread.ident) )
+        lock_container.delete( 'acquireImage' + str(thread.ident) )
+        lock_container.itemconfigure( 'greyRedSem', state = 'normal' )         
+        lock_container.itemconfigure( 'greyGreenSem', state = "hidden" )
         time.sleep(2)
 
-    def setReleaseThread(self,thread,lock):
+    def setReleaseThread( self, thread, lock ):
         container_data = self.lockContainer[lock]
-        lock_container=container_data[0]
-        height = container_data[3]+((50/100)*self.containerHeight)
+        lock_container = container_data[0]
+        height = container_data[3]+( (50/100)*self.containerHeight )
         orient = container_data[4]
-        tagImage = 'acquireImage'+str(thread.ident)
-        tagText = 'text'+str(thread.ident)
+        tagImage = 'acquireImage' + str(thread.ident)
+        tagText = 'text' + str(thread.ident)
         
-        tag = "release"+str(thread.ident)
+        tag = "release" + str(thread.ident)
         
-        if orient== Controller.SINISTRA:
-            self.primaryCanvas.create_image((12/100)*self.primaryCanvas.winfo_width(),height,tag = 'inactiveimage'+str(thread.ident),image=self.computerImage,anchor='n')
-            self.primaryCanvas.create_text((12/100)*self.primaryCanvas.winfo_width(),height+(1.2*self.imageComputerHeight),text = thread.getName(),tag=tag,anchor='n')
+        if orient == Controller.SINISTRA:
+            width = (12/100)*self.primaryCanvas.winfo_width()
+            self.primaryCanvas.create_image( width, height, tag = 'inactiveimage' + str(thread.ident), image = self.computerImage, anchor = 'n' )
+            self.primaryCanvas.create_text( width, height + (1.2*self.imageComputerHeight), text = thread.getName(), tag = tag, anchor = 'n' )
         else:
-            self.primaryCanvas.create_image((88/100)*self.primaryCanvas.winfo_width(),height,tag = 'inactiveimage'+str(thread.ident),image=self.computerImage,anchor='n')
-            self.primaryCanvas.create_text((88/100)*self.primaryCanvas.winfo_width(),height+(1.2*self.imageComputerHeight),text = thread.getName(),tag=tag,anchor='n')
-        self.__moveInLock(tagImage, tagText, orient,lock_container,lock,thread,tag,False)
-        lock_container.itemconfigure('greyRedSem',state="normal")
+            width = (88/100)*self.primaryCanvas.winfo_width()
+            self.primaryCanvas.create_image( width, height, tag = 'inactiveimage' + str(thread.ident), image = self.computerImage, anchor = 'n' )
+            self.primaryCanvas.create_text( width, height + (1.2*self.imageComputerHeight), text = thread.getName(), tag = tag, anchor = 'n' )
+        self.__moveInLock( tagImage, tagText, orient, lock_container, lock, thread, tag, False )
+        lock_container.itemconfigure( 'greyRedSem', state = "normal" )
         self.releasingLock.append(lock)
-        lock_container.after(500,self.__blinkLock,lock_container,True,lock)
-        sleepTime = (height+(self.primaryCanvas.winfo_width()/2)-((30/100)*self.primaryCanvas.winfo_width()))/80
+        lock_container.after( 500, self.__blinkLock, lock_container, True, lock )
+        sleepTime = ( height + ( self.primaryCanvas.winfo_width()/2 ) - ( (30/100)*self.primaryCanvas.winfo_width() ) )/80
+        
         return sleepTime
         
-    def drawFutureLockThread(self,thread,lock):
+    def drawFutureLockThread( self, thread, lock ):
         container_data = self.lockContainer[lock]
-        wait_data= container_data[1]
+        wait_data = container_data[1]
         wait_data.drawFutureAcquireThread(thread)
 
     def notifyLock(self,lock,condition,isAll):
@@ -719,7 +732,7 @@ class Controller:
 # ???
 stepLock = threading.Lock()
 stepCondition = threading.Condition(stepLock)
-controller = Controller(stepLock,stepCondition)
+controller = Controller(stepLock, stepCondition)
 
 class _StopAndPlay:
     def __init__(self):
