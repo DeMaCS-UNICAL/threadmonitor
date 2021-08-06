@@ -1,4 +1,4 @@
-from tm_graph.logic.graph_logic import Lock,Thread,Condition
+from tm_graph.wrapper.threading import Lock,Thread,Condition
 from random import random,randrange
 from time import sleep
 from tm_graph.view.graph_view import startGraph
@@ -14,11 +14,10 @@ class Structure:
         self.lock.release()
 
 class MyThread(Thread):
-    def __init__(self,structures):
-        super().__init__()
-        self.structures=structures
+    def __init__(self,structures: list):
+        super().__init__(daemon=True)
+        self.structures = structures
         
-    
     def run(self):
         while True:
             i = randrange(len(self.structures) - 1)
@@ -26,9 +25,12 @@ class MyThread(Thread):
             sleep(randrange(3))
 
 structures = [Structure() for i in range(5)]
-threads = []
+threads = [MyThread(structures) for i in range(16)]
 
-for i in range(16):
-    MyThread(structures).start()
+for thr in threads:
+    thr.start()
 
 startGraph()
+
+for thr in threads:
+    thr.join()

@@ -1,4 +1,4 @@
-from tm_graph.logic.graph_logic import Lock,Thread,Condition
+from tm_graph.wrapper.threading import Lock,Thread,Condition
 from time import sleep
 from tm_graph.view.graph_view import startGraph
 
@@ -40,8 +40,9 @@ class TestThread(Thread):
         self.structure = structure
     
     def run(self):
-        self.structure.addNumber()
-        print(self.structure.number)
+        for i in range(100):
+            self.structure.addNumber()
+            print(self.structure.number)
         
 structure = Structure()
 
@@ -53,7 +54,7 @@ test = TestThread(structure)
 test.start()
 
 t2.start()
-#t3.start()
-#t1.start()
+t3.start()
+t1.start()
 
 startGraph()

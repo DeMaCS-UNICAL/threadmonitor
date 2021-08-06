@@ -1,8 +1,9 @@
-from tm_graph.logic.graph_logic import Lock, Thread, Condition, get_ident
+from tm_graph.wrapper.threading import Lock, Thread, Condition, get_ident
 from time import sleep
 from tm_graph.view.graph_view import startGraph
+import threading
 
-printLock = Lock()
+printLock = threading.Lock()
 
 class Structure:
     def __init__(self):

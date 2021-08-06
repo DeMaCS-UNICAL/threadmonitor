@@ -1,7 +1,7 @@
 # coding=utf-8
 
 import tm_graph.view.graph_view as graph_view
-import threading
+import threading as std_threading
 import time
 import os
 
@@ -9,7 +9,36 @@ import os
 # lock della libreria: wrapper sulla classe Lock standard
 #
 
-class Lock:
+class _StopAndPlay:
+    def __init__(self):
+        self.lock = std_threading.Lock()
+        self.condition = std_threading.Condition(self.lock)
+        self.stepLock = graph_view.stepLock
+        self.stepCondition = graph_view.stepCondition
+        self.running = True
+        self.controller = graph_view.controller
+    
+    def stop(self):
+        with self.lock:
+            self.running = False
+    
+    def play(self):
+        with self.lock:
+            self.running = True
+            self.condition.notifyAll()
+    
+    def run(self):
+        #TODO: acquisizione di un lock "globale"
+        with self.stepLock:
+            if self.controller.checkIfStopped():
+                while self.controller.checkIfStopped(checkStepsToo = True):
+                    self.stepCondition.wait()
+                self.controller.decreaseStep()
+
+# è possibile utilizzare un unico StopAndPlay?
+snp = _StopAndPlay()
+
+class Lock():
     __id = 1
     def __init__(self):
         # internal
@@ -18,21 +47,21 @@ class Lock:
         # view
         self.controller = graph_view.controller
         self.controller.addLock(self)
-        self.playController = graph_view._StopAndPlay()
+        self.playController = snp
         # wait
-        self.waitLock = threading.Lock()
-        self.waitCondition = threading.Condition(self.waitLock)
+        self.waitLock = std_threading.Lock()
+        self.waitCondition = std_threading.Condition(self.waitLock)
         # A CHE CAZZO SERVE
         self.isInWait = False
         # release
-        self.releaseLock = threading.Lock()
-        self.releaseCondition = threading.Condition(self.releaseLock)   
+        self.releaseLock = std_threading.Lock()
+        self.releaseCondition = std_threading.Condition(self.releaseLock)   
         self.isReleased = False     
         # ???
-        self.lockCondition = threading.Lock()
-        self.condCondition = threading.Condition(self.lockCondition)
-        # true lock?
-        self.lock = threading.Lock()
+        self.lockCondition = std_threading.Lock()
+        self.condCondition = std_threading.Condition(self.lockCondition)
+        #true lock
+        self.lock = std_threading.Lock()
         # non so a cosa afferiscono
         self.canAcquire = False
         self.condionThread = {}
@@ -45,9 +74,9 @@ class Lock:
             self.playController.run()
             # puramente operazioni grafiche?
             sleepTime = self.controller.setWaitThread( current_thread(), self )
-            time.sleep(sleepTime)
+            time.sleep( sleepTime )
         # vera chiamata a threading.lock.acquire
-        ret = self.lock.acquire(blocking, timeout)
+        ret = self.lock.acquire( blocking, timeout )
         # aggiornamento grafica
         self.playController.run()
         self.controller.drawFutureLockThread( current_thread(), self )
@@ -60,12 +89,12 @@ class Lock:
     def release(self) -> None:
         # sembra fare principalmente operazioni grafiche sotto releaselock
         with self.releaseLock:
-            if threading.current_thread() in self.condionThread.keys():
-                self.controller.setAcquireThreadFromCondition( threading.current_thread(), self, self.condionThread[threading.current_thread()] )
-                del self.condionThread[threading.current_thread()]
+            if std_threading.current_thread() in self.condionThread.keys():
+                self.controller.setAcquireThreadFromCondition( std_threading.current_thread(), self, self.condionThread[std_threading.current_thread()] )
+                del self.condionThread[ std_threading.current_thread() ]
                 time.sleep(3)
             self.playController.run()
-            self.controller.setReleaseThread( threading.current_thread(), self )
+            self.controller.setReleaseThread( std_threading.current_thread(), self )
             while not self.isReleased:
                 self.releaseCondition.wait()
         # vero release?
@@ -76,7 +105,7 @@ class Lock:
     #TODO: non-compliant colla libreria standard, da decidere se sostituirlo
     def addConditionThread(self,thread,condition) -> None:
         self.playController.run()
-        self.controller.setThreadInCondition(thread,self,condition)
+        self.controller.setThreadInCondition( thread, self, condition)
         self.condionThread[thread] = condition
 
     #TODO: non-compliant colla libreria standard, da decidere se sostituirlo
@@ -85,16 +114,16 @@ class Lock:
             
     #TODO: non-compliant colla libreria standard, da decidere se sostituirlo
     def setName( self, name ) -> None:
-        self.controller.setLockName(self,name)
+        self.controller.setLockName( self, name )
 
 #
 # thread della libreria
 #
 
-class Thread(threading.Thread):
+class Thread(std_threading.Thread):
     # default list of Thread.__init__ function arguments: necessario per garantire la retrocompatibilità
-    def __init__(self, _group = None, _target = None, _name = None, _args = (), _kwargs = {}, *, _daemon = True):
-        super().__init__(group = _group, target = _target, name = _name, args = _args, kwargs = _kwargs, daemon = _daemon)
+    def __init__(self, group = None, target = None, name = None, args = (), kwargs = {}, *, daemon = True):
+        super().__init__(group = group, target = target, name = name, args = args, kwargs = kwargs, daemon = daemon)
         self.controller = graph_view.controller
         self.controller.addThread(self)
     
@@ -106,7 +135,7 @@ class Thread(threading.Thread):
 # condition della libreria
 #
 
-class Condition(threading.Condition):
+class Condition(std_threading.Condition):
     #TODO: rendere la gestione dei lock trasparente all'utente
     def __init__(self,lock = None):
         super().__init__(lock)
@@ -116,18 +145,18 @@ class Condition(threading.Condition):
         self.controller.addCondition(self,self.glock)
         
     def wait(self, timeout = None) -> bool:
-        self.glock.addConditionThread(threading.current_thread(),self)
+        self.glock.addConditionThread(std_threading.current_thread(),self)
         return super().wait(timeout)
 
     def wait_for(self, predicate, timeout = None) -> bool:
-        self.glock.addConditionThread(threading.current_thread(),self)
+        self.glock.addConditionThread(std_threading.current_thread(),self)
         return super().wait_for(predicate, timeout)
 
     def notify(self, n = 1) -> None:
         self.controller.notifyLock(self.glock,self,False)
         super().notify(n)
 
-    def notifyAll(self) -> None:
+    def notify_all(self) -> None:
         self.controller.notifyLock(self.glock,self,True)
         super().notify( len(self._waiters) )
     
@@ -138,10 +167,10 @@ class Condition(threading.Condition):
 #da valutare se qua si può utilizzare anche il Thread di libreria
 #reflection?
 def current_thread() -> Thread:
-    return threading.current_thread()
+    return std_threading.current_thread()
 
 def get_ident() -> int:
-    return threading.get_ident()
+    return std_threading.get_ident()
 
 def get_native_id() -> int:
-    return threading.get_native_id()
+    return std_threading.get_native_id()

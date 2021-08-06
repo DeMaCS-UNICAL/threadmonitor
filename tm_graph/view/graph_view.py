@@ -2,7 +2,7 @@
 
 from tkinter import ttk
 from tkinter import *
-import tm_graph.logic.graph_logic as tm_logic
+import tm_graph.wrapper.threading as tm_logic
 from PIL import ImageTk
 import threading
 import time
@@ -16,7 +16,7 @@ class ConditionContainer:
         self.currentWidth = 20
         self.image = image
         self.containerHeight = containerHeight
-        self.imageComputerHeight=imageComputerHeight
+        self.imageComputerHeight = imageComputerHeight
         self.imageComputerWidth = imageComputerWidth
         self.semCanvas = semCanvas
         self.conditionLabel = conditionLabel
@@ -301,6 +301,7 @@ class Controller:
             self.step = 0          
             self.stepCondition.notifyAll()
     
+    #TODO: modifica di variabili senza sincronizzazione, è quello che vogliamo?
     def stop(self):
         self.playButton.configure( state = 'normal' )
         self.nextStepButton.configure( state = 'normal' )
@@ -314,6 +315,7 @@ class Controller:
             self.step += 1
             self.stepCondition.notifyAll()
     
+    #no synchronization (look to StopAndPlay.run)
     def decreaseStep(self):
         self.step -= 1
 
@@ -421,7 +423,7 @@ class Controller:
     def addCondition(self,condition,lock):
         ### prendo il container principale del lock a cui è associata la condition ###
         container_data = self.lockContainer[lock]
-        lock_container=container_data[7]
+        lock_container = container_data[7]
 
         ### prendo i dati utili a creare la window per la condition ###
         current_height = container_data[6]
@@ -729,35 +731,16 @@ class Controller:
         for thread in self.threads:
             thread.exit()
 
+    #no synchronization (look to StopAndPlay.run)
+    def checkIfStopped(self, checkStepsToo = False):
+        if checkStepsToo:
+            return self.isStopped and self.step <= 0
+        return self.isStopped
+
 # ???
 stepLock = threading.Lock()
 stepCondition = threading.Condition(stepLock)
 controller = Controller(stepLock, stepCondition)
-
-class _StopAndPlay:
-    def __init__(self):
-        self.lock = threading.Lock()
-        self.condition = threading.Condition(self.lock)
-        self.stepLock = stepLock
-        self.stepCondition = stepCondition
-        self.running=True
-        self.controller = controller
-    
-    def stop(self):
-        with self.lock:
-            self.running=False
-    
-    def play(self):
-        with self.lock:
-            self.running = True
-            self.condition.notifyAll()
-    
-    def run(self):
-        if self.controller.isStopped:
-            with self.stepLock:
-                while self.controller.step<=0 and self.controller.isStopped:
-                    self.stepCondition.wait()
-                self.controller.decreaseStep()
 
 def startGraph():
     controller.start()
