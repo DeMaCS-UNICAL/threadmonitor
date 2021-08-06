@@ -301,6 +301,7 @@ class Controller:
             self.step = 0          
             self.stepCondition.notifyAll()
     
+    
     #TODO: modifica di variabili senza sincronizzazione, è quello che vogliamo?
     def stop(self):
         self.playButton.configure( state = 'normal' )
