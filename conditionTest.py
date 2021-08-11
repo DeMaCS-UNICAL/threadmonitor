@@ -1,6 +1,6 @@
-from tm_graph.wrapper.threading import Lock,Thread,Condition
+from threadmonitor.wrapper.threading import Lock,Thread,Condition
 from time import sleep
-from tm_graph.view.graph_view import startGraph
+from threadmonitor.view.controllers import startGraph
 
 class Structure:
     def __init__(self):
@@ -13,7 +13,7 @@ class Structure:
     def minNumber(self):
         self.lock.acquire()
         self.number-=3
-        if self.number ==0:
+        if self.number == 0:
             self.condition2.notify()
         self.lock.release()
     
@@ -43,18 +43,25 @@ class TestThread(Thread):
         for i in range(100):
             self.structure.addNumber()
             print(self.structure.number)
-        
-structure = Structure()
 
-t1 = MyThread(structure)
-t2 = MyThread(structure)
-t3 = MyThread(structure)
+if __name__ == "__main__":
+    structure = Structure()
 
-test = TestThread(structure)
-test.start()
+    t1 = MyThread(structure)
+    t2 = MyThread(structure)
+    t3 = MyThread(structure)
 
-t2.start()
-t3.start()
-t1.start()
+    test = TestThread(structure)
+    test.start()
 
-startGraph()
+    t2.start()
+    t3.start()
+    t1.start()
+
+    startGraph()
+
+    t2.join()
+    t3.join()
+    t1.join()
+
+    test.join()

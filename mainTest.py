@@ -1,6 +1,6 @@
-from tm_graph.wrapper.threading import Lock, Thread, Condition, get_ident
+from threadmonitor.wrapper.threading import Lock, Thread, Condition, get_ident
 from time import sleep
-from tm_graph.view.graph_view import startGraph
+from threadmonitor.view.controllers import startGraph
 import threading
 
 printLock = threading.Lock()
@@ -42,17 +42,18 @@ class MyThread(Thread):
             self.structure3.get()
             sleep(5)
 
-structure1 = Structure()
-structure2 = Structure()
-structure3 = Structure()
+if __name__ == "__main__":
+    structure1 = Structure()
+    structure2 = Structure()
+    structure3 = Structure()
 
-threads = []
+    threads = []
 
-for i in range(4):
-    t = MyThread(structure3,structure2,structure1)
-    threads.append(t)
+    for i in range(4):
+        t = MyThread(structure3,structure2,structure1)
+        threads.append(t)
 
-for t in threads:
-    t.start()
+    for t in threads:
+        t.start()
 
-startGraph()
+    startGraph()
