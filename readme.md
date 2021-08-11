@@ -8,8 +8,8 @@ Library originally made by Guido Scarlato, forked by Davide Caligiuri.
 ``` python 
 # to obtain a perfectly valid multithreading code, replace with:
 # from threading import Lock, Thread, Condition
-from tm_graph.logic.graph_logic import Lock, Thread, Condition
-from tm_graph.view.graph_view import startGraph
+from threadmonitor.wrapper.threading import Lock, Thread, Condition
+from threadmonitor.view.controllers import startGraph
 
 class Structure:
     def __init__(self):
