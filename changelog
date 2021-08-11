@@ -24,3 +24,4 @@ Changelog:
 - moved _StopAndPlay hierarchy from threading.py to utils.py
 - renamed graph_view.py to controllers.py
 - added requirements.txt
+- added test subdirectory and moved *Test.py there

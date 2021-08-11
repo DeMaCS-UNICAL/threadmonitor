@@ -2,7 +2,7 @@ Library originally made by Guido Scarlato, forked by Davide Caligiuri.
 
 # GraphThreading
 
-![](application.PNG)
+![](resource/application.PNG)
 
 ### Example
 ``` python 
