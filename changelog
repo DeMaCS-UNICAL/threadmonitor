@@ -23,3 +23,4 @@ Changelog:
 - added the getResourceFromName() method in the graph_view.py file
 - moved _StopAndPlay hierarchy from threading.py to utils.py
 - renamed graph_view.py to controllers.py
+- added requirements.txt
