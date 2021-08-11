@@ -17,8 +17,8 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'ThreadMonitor'
-copyright = '2021, Davide Caligiuri, Guido Scalzo'
-author = 'Davide Caligiuri, Guido Scalzo'
+copyright = '2021, Davide Caligiuri, Guido Scarlato'
+author = 'Davide Caligiuri, Guido Scarlato'
 
 
 # -- General configuration ---------------------------------------------------
