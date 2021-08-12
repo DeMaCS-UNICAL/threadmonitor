@@ -28,20 +28,21 @@ class MyThread(GraphThread):
     def run(self):
         while True:
             self.structure.get()
-            
-structure = Structure()
-threads = []
 
-for i in range(4):
-    t = MyThread(structure)
-    threads.append(t)
+if __name__ == "__main__":            
+    structure = Structure()
+    threads = []
 
-for t in threads:
-    t.start()
+    for i in range(4):
+        t = MyThread(structure)
+        threads.append(t)
 
-startGraph()
+    for t in threads:
+        t.start()
+
+    startGraph()
 ```
-
+## Instructions
 ---
 ### Clone
 
@@ -49,21 +50,30 @@ startGraph()
 ---
 ### Setup
 
-> using pipenv:
+> using pipenv (recommended):
 
 ```shell
-pipenv install 
+pipenv run install
 ```
 
-> manual installation:
+> using pip:
 
 ```shell
 sudo apt-get install python3-tk
-pip3 install Pillow 
+pip3 install -r requirements.txt 
 ```
 
 ---
+### Update documentation
 
+```shell
+cd docs
+make clean
+make [html | epub | latex | ...] 
+```
+For more, refer to the [Sphinx documentation](https://www.sphinx-doc.org/en/master/man/sphinx-build.html).
+
+---
 ## Features
 > Graphic representation of the components
 

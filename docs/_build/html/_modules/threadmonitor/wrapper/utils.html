@@ -1,0 +1,93 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>threadmonitor.wrapper.utils &#8212; ThreadMonitor  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/haiku.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../../../index.html">
+          <span>ThreadMonitor  documentation</span></a></h1>
+        <h2 class="heading"><span>threadmonitor.wrapper.utils</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        <a class="uplink" href="../../../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <h1>Source code for threadmonitor.wrapper.utils</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">threadmonitor.view.controllers</span> <span class="k">as</span> <span class="nn">graph_view</span>
+<span class="kn">import</span> <span class="nn">threading</span> <span class="k">as</span> <span class="nn">std_threading</span>
+
+<span class="k">class</span> <span class="nc">_StopAndPlay</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span> <span class="o">=</span> <span class="n">std_threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">condition</span> <span class="o">=</span> <span class="n">std_threading</span><span class="o">.</span><span class="n">Condition</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stepLock</span> <span class="o">=</span> <span class="n">graph_view</span><span class="o">.</span><span class="n">stepLock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stepCondition</span> <span class="o">=</span> <span class="n">graph_view</span><span class="o">.</span><span class="n">stepCondition</span>
+        <span class="c1">#verificare se è possibile rimuovere questa variabile</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">controller</span> <span class="o">=</span> <span class="n">graph_view</span><span class="o">.</span><span class="n">controller</span>
+    
+    <span class="c1">#TODO: capire il funzionamento di stop</span>
+    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1">#TODO: capire il funzionamento di play</span>
+    <span class="k">def</span> <span class="nf">play</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">notifyAll</span><span class="p">()</span>
+    
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#TODO: acquisizione di un lock &quot;globale&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">stepLock</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">checkIfStopped</span><span class="p">():</span>
+                <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">checkIfStopped</span><span class="p">(</span><span class="n">checkStepsToo</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">stepCondition</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">decreaseStep</span><span class="p">()</span>
+
+<div class="viewcode-block" id="singleton"><a class="viewcode-back" href="../../../threadmonitor.wrapper.html#threadmonitor.wrapper.utils.singleton">[docs]</a><span class="k">def</span> <span class="nf">singleton</span><span class="p">(</span><span class="n">class_</span><span class="p">):</span>
+    <span class="n">instances</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">def</span> <span class="nf">getinstance</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">class_</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">instances</span><span class="p">:</span>
+            <span class="n">instances</span><span class="p">[</span><span class="n">class_</span><span class="p">]</span> <span class="o">=</span> <span class="n">class_</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">instances</span><span class="p">[</span><span class="n">class_</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">getinstance</span></div>
+
+<span class="nd">@singleton</span>
+<span class="k">class</span> <span class="nc">_SingletonStopAndPlay</span><span class="p">(</span><span class="n">_StopAndPlay</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        <a class="uplink" href="../../../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Davide Caligiuri, Guido Scarlato.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.1.2.
+    </div>
+  </body>
+</html>
