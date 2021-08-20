@@ -1,6 +1,6 @@
 # coding=utf-8
 
-import threadmonitor.view.controllers as graph_view
+import threadmonitor.view.tk as graph_view
 import threading as std_threading
 import time
 import os

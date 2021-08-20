@@ -9,6 +9,7 @@ Subpackages
 
    threadmonitor.view
    threadmonitor.wrapper
+   threadmonitor.model
 
 Module contents
 ---------------

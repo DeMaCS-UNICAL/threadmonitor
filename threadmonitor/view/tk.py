@@ -2,11 +2,19 @@
 
 from tkinter import ttk
 from tkinter import *
+from typing import Optional
 from PIL import ImageTk
 import threading
 import time
 from functools import partial
-import os
+from threadmonitor.view.utils import getResourceFromName
+
+
+def createAndEmplaceButton(master, text, command, relx, rely, anchor, state = 'normal') -> Button:
+    ret = Button(master, text = text, command = command, state = state)
+    ret.place(relx = relx, rely = rely, anchor = anchor)
+    return ret
+
 
 class ConditionContainer:
     def __init__( self, conditionContainer, image, containerHeight, imageComputerHeight, imageComputerWidth, semCanvas, conditionLabel, semGreenCanvas ):
@@ -161,12 +169,6 @@ class _WaitContainer:
     def drawFutureAcquireThread( self, thread ) -> None:
         self.container.itemconfigure( f"text{ str(thread.ident) }", fill='#cd5b45' )
 
-def getResourceFromName(filename: str) -> str:
-    for r,d,f in os.walk(".."):
-        for files in f:
-            if files == filename:
-                #print(os.path.join(r,files))
-                return os.path.join(r,files)
 
 class Controller:
     
@@ -177,10 +179,10 @@ class Controller:
     INDEX_LOCK_CONTAINER = 1
     isStopped = False
     
-    def __init__(self, stepLock: threading.Lock, stepCondition: threading.Condition):
+    def __init__( self, stepLock: threading.Lock, stepCondition: threading.Condition ):
         
         self.window = Tk()
-        self.window.title('graphthreading')
+        self.window.title( 'graphthreading' )
         self.stepLock = stepLock
         self.stepCondition = stepCondition
 
@@ -191,7 +193,7 @@ class Controller:
         self.started = False
         self.step = 0
         self.startLock = threading.Lock()
-        self.startCondition = threading.Condition(self.startLock)
+        self.startCondition = threading.Condition( self.startLock )
         ### INIZIALIZZAZIONE LOGICA ###
 
         ### hashMap contenente come chiave il nome del lock, e come valore il relativo canvas ###
@@ -226,6 +228,7 @@ class Controller:
         self.lockHeight = (70/100)*self.containerHeight
         self.inactiveWidth = 500
 
+        #TODO: ?
         self.releasingLock = []
        
         ### Lista di tutti i container creati ###
@@ -234,6 +237,7 @@ class Controller:
         ### Contiene come chiave gli scroll, e come valore gli oggetti a cui sono attaccati ###
         self.scrolls = []
 
+        #TODO: ?
         self.conditions = []
        
         ### Inizializzazione inactive Frame ###
@@ -245,19 +249,28 @@ class Controller:
 
         self.frame = Frame( self.window, width = self.screen_width, height = self.screen_heigth, background = 'grey' )
         self.frame.pack( fill = BOTH, expand = True )
+
         self.primaryCanvas = Canvas( self.frame, background = '#A0A0A0', highlightthickness = 0, highlightbackground = "black", height = 10000, width = self.screen_width )
+
         self.window.update_idletasks()
+
         self.yscroll = Scrollbar( self.frame, orient = VERTICAL )
         self.yscroll['command'] = self.primaryCanvas.yview
         self.yscroll.pack( side = RIGHT, fill = Y )
+
         self.primaryCanvas['yscrollcommand'] = self.yscroll.set
         self.primaryCanvas.pack( fill = BOTH, expand = True )
 
         self.inactiveCanvas = Canvas( self.primaryCanvas, background = 'white', highlightthickness = 1, highlightbackground = "black", height = 150, width = self.inactiveWidth )
+
         changeThreadButton = Button( self.inactiveCanvas, text = "Change thread name", command = self.createPopupThread )
         changeThreadButton.place( relx = 0.5, rely = 0, anchor = 'n' )
+
+        #changeThreadButton = createAndEmplaceButton(self.inactiveCanvas, "Change thread name", self.createPopupThread, 0.5, 0, 'n')
+
         self.inactiveScroll = ttk.Scrollbar( self.inactiveCanvas, orient = HORIZONTAL, command = self.inactiveCanvas.xview )
         self.inactiveScroll.place( relx = 0.5, rely = 0.93, width = 305, anchor = 'center' )
+
         self.inactiveCanvas.configure( xscrollcommand = self.inactiveScroll.set )
         #self.inactiveCanvas.pack(anchor='center',pady=10)
         self.background = ImageTk.Image.open( getResourceFromName('background.png') )
@@ -274,6 +287,11 @@ class Controller:
         self.playButton.place( relx = 0.93, rely = 0.02, relheight = 0.025 )
         self.stopButton.place( relx = 0.93, rely = 0.045, relheight = 0.025 )
         self.nextStepButton.place( relx = 0.93, rely = 0.070, relheight = 0.025 )
+
+        #self.playButton = createAndEmplaceButton( self.primaryCanvas, 'play', self.play, 0.93, 0.02, 0.025 )
+        #self.stopButton = createAndEmplaceButton( self.primaryCanvas, 'pause', self.stop, 0.93, 0.045, 0.025 )
+        #self.playButton = createAndEmplaceButton( self.primaryCanvas, 'next step', self.nextStep, 0.93, 0.070, 0.025, 'disabled' )
+
 
         ### Inizializzazioni immagini ###
         self.imageComputerHeight = 32
@@ -381,98 +399,98 @@ class Controller:
     def addThread( self, thread ):
         self.threads.append(thread)
 
-    def setLockName(self,lock,name):
-        lock_data =self.lockContainer[lock]
+    def setLockName( self, lock, name ):
+        lock_data = self.lockContainer[lock]
         lock_label = lock_data[5]
-        lock_label.configure(text=name)
+        lock_label.configure( text = name )
 
-    def addLock(self,lock):
+    def addLock( self, lock ):
         ### creo il container e lo aggiungo alla lista di container ###
         
-        container = Canvas(self.primaryCanvas,background='white',highlightthickness=1, highlightbackground="black",height=self.containerHeight,width=self.containerWidth)
+        container = Canvas( self.primaryCanvas, background = 'white', highlightthickness = 1, highlightbackground = "black", height = self.containerHeight, width = self.containerWidth )
                 
-        self.containers.append(container)
+        self.containers.append( container )
 
         ### creo il container che mostra il thread che ha acquisito il lok ###
-        lock_container = Canvas(container,background='white',width = self.containerWidth, height=self.lockHeight)
-        lockLabel = Label(lock_container,text = 'Lock '+str(lock.getId()))
-        lockLabel.place(relx=0.5,rely=0.80,anchor='center')
-        container.create_window(self.containerWidth/2,(30/100)*self.containerHeight,window=lock_container,anchor='n')
+        lock_container = Canvas( container, background = 'white', width = self.containerWidth, height = self.lockHeight )
+        lockLabel = Label( lock_container, text = 'Lock '+ str( lock.getId() ) )
+        lockLabel.place( relx = 0.5, rely = 0.80, anchor = 'center' )
+        container.create_window( self.containerWidth/2, (30/100)*self.containerHeight, window = lock_container, anchor = 'n' )
         
         ### creo il container che mostra i thread in wait ###
-        waitContainer = Canvas(container,background='#fff7dc',highlightthickness=1, highlightbackground="black",width=self.containerWidth,height=self.waitHeight)
-        container.create_window(self.containerWidth/2,(0/100)*self.containerHeight,window=waitContainer,anchor='n')#.place(relx=0.5,anchor='center',rely=0.25, relheight=0.50,relwidth=1)
-        waitLabel = Label(waitContainer,text='Wait threads')
-        waitLabel.place(relx=0,rely=0,anchor='nw')
-        self.waitContainer[lock]=waitContainer
+        waitContainer = Canvas( container, background = '#fff7dc', highlightthickness = 1, highlightbackground = "black", width = self.containerWidth, height = self.waitHeight )
+        container.create_window( self.containerWidth/2, (0/100)*self.containerHeight, window = waitContainer, anchor = 'n' )#.place(relx=0.5,anchor='center',rely=0.25, relheight=0.50,relwidth=1)
+        waitLabel = Label( waitContainer,text = 'Wait threads' )
+        waitLabel.place( relx = 0, rely = 0, anchor = 'nw' )
+        self.waitContainer[ lock ]=waitContainer
 
         ### creo i semafori che mostrano lo stato attuale del lock ###
-        lock_container.create_image(self.containerWidth*(90/100),self.containerHeight*(50/100),image=self.redSem, tag="redSem",state="hidden")
-        lock_container.create_image(self.containerWidth*(90/100),self.containerHeight*(50/100),image=self.greySem, tag="greyRedSem")
+        lock_container.create_image( self.containerWidth*(90/100), self.containerHeight*(50/100), image = self.redSem, tag = "redSem", state = "hidden" )
+        lock_container.create_image( self.containerWidth*(90/100), self.containerHeight*(50/100), image = self.greySem, tag = "greyRedSem" )
 
-        lock_container.create_image(self.containerWidth*(90/100),self.containerHeight*(60/100),image=self.greenSem, tag="greenSem")
-        lock_container.create_image(self.containerWidth*(90/100),self.containerHeight*(60/100),image=self.greySem, tag="greyGreenSem",state="hidden")
+        lock_container.create_image( self.containerWidth*(90/100), self.containerHeight*(60/100), image = self.greenSem, tag = "greenSem" )
+        lock_container.create_image( self.containerWidth*(90/100), self.containerHeight*(60/100), image = self.greySem, tag = "greyGreenSem", state = "hidden" )
 
         ### creo lo scroll del canvas per i thread in wait ###
-        scroll = Scrollbar(waitContainer,orient=VERTICAL,command=waitContainer.yview)
-        scroll.place(relx=1,rely=0.5,relheight=1,anchor='e')
-        waitContainer.configure(yscrollcommand=scroll.set)
-        self.scrolls.append(scroll)
+        scroll = Scrollbar( waitContainer, orient = VERTICAL, command = waitContainer.yview )
+        scroll.place( relx = 1, rely = 0.5, relheight = 1, anchor = 'e' )
+        waitContainer.configure( yscrollcommand = scroll.set )
+        self.scrolls.append( scroll )
         
-        wait_data = _WaitContainer(waitContainer, self.computerImage, self.imageComputerHeight)
+        wait_data = _WaitContainer( waitContainer, self.computerImage, self.imageComputerHeight )
 
         ### associo al lock i relativi container ###
         conditionContainers = {}
         currentHeightCanvas = self.containerHeight
-        self.lockContainer[lock]=[lock_container,wait_data,conditionContainers,self.currentHeightPosition,self.currentOrientPosition%2,lockLabel,currentHeightCanvas,container]
+        self.lockContainer[ lock ]=[lock_container, wait_data, conditionContainers, self.currentHeightPosition, self.currentOrientPosition%2, lockLabel, currentHeightCanvas, container ]
         
         ### aggiorno le variabili per il posizionamento ###
-        self.currentOrientPosition+=1
+        self.currentOrientPosition += 1
         
-    def addCondition(self,condition,lock):
+    def addCondition( self, condition, lock ):
         ### prendo il container principale del lock a cui è associata la condition ###
-        container_data = self.lockContainer[lock]
+        container_data = self.lockContainer[ lock ]
         lock_container = container_data[7]
 
         ### prendo i dati utili a creare la window per la condition ###
         current_height = container_data[6]
-        current_height+=self.conditionHeight
-        container_data[6]=current_height
-        lock_container.configure(height=current_height)
+        current_height += self.conditionHeight
+        container_data[6] = current_height
+        lock_container.configure( height = current_height )
 
         ### prendo il container delle condition associate al lock ###
         conditionContainers = container_data[2]
 
         ### creo il canvas relativo alla condition che sto aggiungendo ###
-        conditionContainer = Canvas(lock_container,background='#ffc04c',highlightthickness=1, highlightbackground="black",width=self.containerWidth,height=self.conditionHeight)
-        lock_container.create_window(self.containerWidth/2,(100/100)*current_height,window=conditionContainer,anchor='s')
-        semCanvas = Canvas(lock_container,background='#ffc04c',width=60,height=17)
-        lock_container.create_window(self.containerWidth*(80/100),current_height-(45/100)*self.conditionHeight,window=semCanvas,anchor='n')
-        semCanvas.create_image(15,10,image=self.redSem, tag="redSem",anchor='center')
-        semCanvas.create_image(15,10,image=self.greySem, tag="greyRedSem",anchor='center')
-        semCanvas.create_text(45,12,text="ONE")
+        conditionContainer = Canvas( lock_container, background = '#ffc04c', highlightthickness = 1, highlightbackground = "black", width = self.containerWidth, height = self.conditionHeight )
+        lock_container.create_window( self.containerWidth/2, (100/100)*current_height, window = conditionContainer, anchor = 's' )
+        semCanvas = Canvas( lock_container, background = '#ffc04c', width = 60, height = 17 )
+        lock_container.create_window( self.containerWidth*(80/100), current_height-(45/100)*self.conditionHeight, window = semCanvas, anchor = 'n' )
+        semCanvas.create_image( 15, 10, image = self.redSem, tag = "redSem", anchor = 'center' )
+        semCanvas.create_image( 15, 10, image = self.greySem, tag = "greyRedSem", anchor = 'center' )
+        semCanvas.create_text( 45, 12, text = "ONE" )
 
-        semGreenCanvas = Canvas(lock_container,background='#ffc04c',width=60,height=17)
-        lock_container.create_window(self.containerWidth*(20/100),current_height-(45/100)*self.conditionHeight,window=semGreenCanvas,anchor='n')
-        semGreenCanvas.create_image(45,10,image=self.greenSem, tag="greenSem",anchor='center')
-        semGreenCanvas.create_image(45,10,image=self.greySem, tag="greyGreenSem",anchor='center')
-        semGreenCanvas.create_text(15,12,text="ALL")
+        semGreenCanvas = Canvas( lock_container, background = '#ffc04c', width = 60, height = 17 )
+        lock_container.create_window( self.containerWidth*(20/100), current_height-(45/100)*self.conditionHeight, window = semGreenCanvas, anchor = 'n' )
+        semGreenCanvas.create_image( 45, 10, image = self.greenSem, tag = "greenSem", anchor = 'center' )
+        semGreenCanvas.create_image( 45, 10, image = self.greySem, tag = "greyGreenSem", anchor = 'center' )
+        semGreenCanvas.create_text( 15, 12, text = "ALL" )
 
 
-        conditionLabel = Label(conditionContainer,text='Condition '+condition.name)
-        conditionLabel.place(relx=0.5,rely=0.70,anchor='c')
-        scroll = Scrollbar(conditionContainer,orient=HORIZONTAL,command=conditionContainer.xview)
-        scroll.place(relx=0,rely=1,relwidth=1,anchor='sw')
-        conditionContainer.configure(xscrollcommand=scroll.set)
-        conditionData = ConditionContainer(conditionContainer,self.computerImage,self.conditionHeight,self.imageComputerHeight,self.imageComputerWidth,semCanvas,conditionLabel,semGreenCanvas)
+        conditionLabel = Label( conditionContainer, text = 'Condition '+condition.name )
+        conditionLabel.place( relx = 0.5, rely = 0.70, anchor = 'c' )
+        scroll = Scrollbar( conditionContainer, orient = HORIZONTAL, command = conditionContainer.xview )
+        scroll.place( relx = 0, rely = 1, relwidth = 1, anchor = 'sw' )
+        conditionContainer.configure( xscrollcommand = scroll.set )
+        conditionData = ConditionContainer( conditionContainer, self.computerImage, self.conditionHeight, self.imageComputerHeight, self.imageComputerWidth, semCanvas, conditionLabel, semGreenCanvas )
         ### inserisco la condition nel container ###
-        conditionContainers[condition]=conditionData
-        self.conditions.append(conditionContainer)
+        conditionContainers[ condition ] = conditionData
+        self.conditions.append( conditionContainer )
 
-    def setConditionName(self,condition,lock,name):
-        lock_data=self.lockContainer[lock]
+    def setConditionName( self, condition, lock, name ):
+        lock_data = self.lockContainer[ lock ]
         conditionContainer = lock_data[2]
-        conditionContainer[condition].setConditionLabel(name)
+        conditionContainer[ condition ].setConditionLabel( name )
 
     def __moveFromInactiveToWait( self, thread, wait_container, height, orient, tag, lock, startTime ):
        

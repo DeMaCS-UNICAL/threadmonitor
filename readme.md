@@ -74,6 +74,13 @@ make [html | epub | latex | ...]
 For more, refer to the [Sphinx documentation](https://www.sphinx-doc.org/en/master/man/sphinx-build.html).
 
 ---
+### Execute tests
+
+```shell
+py -m tests.[testname]
+```
+
+---
 ## Features
 > Graphic representation of the components
 

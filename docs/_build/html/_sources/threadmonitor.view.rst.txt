@@ -4,10 +4,18 @@ threadmonitor.view package
 Submodules
 ----------
 
-threadmonitor.view.controllers module
+threadmonitor.view.tk module
 -------------------------------------
 
-.. automodule:: threadmonitor.view.controllers
+.. automodule:: threadmonitor.view.tk
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+threadmonitor.view.utils module
+-------------------------------------
+
+.. automodule:: threadmonitor.view.utils
    :members:
    :undoc-members:
    :show-inheritance:

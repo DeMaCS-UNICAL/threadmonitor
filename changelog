@@ -25,3 +25,16 @@ Changelog:
 - renamed graph_view.py to controllers.py
 - added requirements.txt
 - added test subdirectory and moved *Test.py there
+
+2021/08/13
+- renamed threadmonitor.view.graph_view to threadmonitor.view.tk
+
+2021/08/15
+- created model submodule
+- updated docs to reflect project changes
+
+2021/08/20
+- fixed some problems with test execution
+- added the correct method for executing tests in the readme
+- (W.I.P.) started implementing some helper functions to reduce boilerplate code in tk.py
+  KNOWN ISSUES: too many different params to handle singularly, probably needs variable unpacking?
