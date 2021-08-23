@@ -5,31 +5,31 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>threadmonitor.controller.controller &#8212; ThreadMonitor  documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/haiku.css" />
-    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
-    <script src="../../../_static/jquery.js"></script>
-    <script src="../../../_static/underscore.js"></script>
-    <script src="../../../_static/doctools.js"></script>
-    <link rel="index" title="Index" href="../../../genindex.html" />
-    <link rel="search" title="Search" href="../../../search.html" /> 
+    <title>threadmonitor.controller &#8212; ThreadMonitor  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/haiku.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
   </head><body>
-      <div class="header" role="banner"><h1 class="heading"><a href="../../../index.html">
+      <div class="header" role="banner"><h1 class="heading"><a href="../../index.html">
           <span>ThreadMonitor  documentation</span></a></h1>
-        <h2 class="heading"><span>threadmonitor.controller.controller</span></h2>
+        <h2 class="heading"><span>threadmonitor.controller</span></h2>
       </div>
       <div class="topnav" role="navigation" aria-label="top navigation">
       
         <p>
-        <a class="uplink" href="../../../index.html">Contents</a>
+        <a class="uplink" href="../../index.html">Contents</a>
         </p>
 
       </div>
       <div class="content" role="main">
         
         
-  <h1>Source code for threadmonitor.controller.controller</h1><div class="highlight"><pre>
+  <h1>Source code for threadmonitor.controller</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">threading</span>
 <span class="kn">from</span> <span class="nn">tkinter</span> <span class="kn">import</span> <span class="n">ttk</span>
 <span class="kn">from</span> <span class="nn">tkinter</span> <span class="kn">import</span> <span class="o">*</span>
@@ -41,17 +41,17 @@
 <span class="kn">from</span> <span class="nn">threadmonitor.utils</span> <span class="kn">import</span> <span class="n">getResourceFromName</span>
 <span class="kn">from</span> <span class="nn">threadmonitor.view.tk</span> <span class="kn">import</span> <span class="n">InactiveContainer</span><span class="p">,</span> <span class="n">WaitContainer</span><span class="p">,</span> <span class="n">ConditionContainer</span> 
 
-<div class="viewcode-block" id="createAndEmplaceButton"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.createAndEmplaceButton">[docs]</a><span class="k">def</span> <span class="nf">createAndEmplaceButton</span><span class="p">(</span><span class="n">master</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">command</span><span class="p">,</span> <span class="o">**</span><span class="n">placeArgs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Button</span><span class="p">:</span>
+<div class="viewcode-block" id="createAndEmplaceButton"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.createAndEmplaceButton">[docs]</a><span class="k">def</span> <span class="nf">createAndEmplaceButton</span><span class="p">(</span><span class="n">master</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">command</span><span class="p">,</span> <span class="o">**</span><span class="n">placeArgs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Button</span><span class="p">:</span>
     <span class="n">ret</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">master</span><span class="p">,</span> <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="p">,</span> <span class="n">command</span> <span class="o">=</span> <span class="n">command</span><span class="p">)</span>
     <span class="n">ret</span><span class="o">.</span><span class="n">place</span><span class="p">(</span><span class="o">**</span><span class="n">placeArgs</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">ret</span></div>
 
-<div class="viewcode-block" id="getPhotoImage"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.getPhotoImage">[docs]</a><span class="k">def</span> <span class="nf">getPhotoImage</span><span class="p">(</span><span class="n">resourceName</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">resizeParams</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">master</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ImageTk</span><span class="o">.</span><span class="n">PhotoImage</span><span class="p">:</span>
+<div class="viewcode-block" id="getPhotoImage"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.getPhotoImage">[docs]</a><span class="k">def</span> <span class="nf">getPhotoImage</span><span class="p">(</span><span class="n">resourceName</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">resizeParams</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">master</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ImageTk</span><span class="o">.</span><span class="n">PhotoImage</span><span class="p">:</span>
     <span class="n">image</span> <span class="o">=</span> <span class="n">ImageTk</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span> <span class="n">getResourceFromName</span><span class="p">(</span><span class="n">resourceName</span><span class="p">)</span> <span class="p">)</span>
     <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span> <span class="n">resizeParams</span> <span class="p">)</span>
     <span class="k">return</span> <span class="n">ImageTk</span><span class="o">.</span><span class="n">PhotoImage</span><span class="p">(</span> <span class="n">master</span> <span class="o">=</span> <span class="n">master</span><span class="p">,</span> <span class="n">image</span> <span class="o">=</span> <span class="n">image</span> <span class="p">)</span></div>
 
-<div class="viewcode-block" id="Controller"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.Controller">[docs]</a><span class="k">class</span> <span class="nc">Controller</span><span class="p">:</span>
+<div class="viewcode-block" id="Controller"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller">[docs]</a><span class="k">class</span> <span class="nc">Controller</span><span class="p">:</span>
     
     <span class="n">FINISH</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">DESTRA</span> <span class="o">=</span> <span class="mi">1</span>
@@ -175,7 +175,7 @@
         
         <span class="bp">self</span><span class="o">.</span><span class="n">inactiveData</span> <span class="o">=</span> <span class="n">InactiveContainer</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">inactiveCanvas</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">computerImage</span> <span class="p">)</span>
 
-<div class="viewcode-block" id="Controller.play"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.Controller.play">[docs]</a>    <span class="k">def</span> <span class="nf">play</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Controller.play"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.play">[docs]</a>    <span class="k">def</span> <span class="nf">play</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">stepLock</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">stopButton</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span> <span class="n">state</span> <span class="o">=</span> <span class="s1">&#39;normal&#39;</span> <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">nextStepButton</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span> <span class="n">state</span> <span class="o">=</span> <span class="s1">&#39;disabled&#39;</span> <span class="p">)</span>
@@ -187,7 +187,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">stepCondition</span><span class="o">.</span><span class="n">notifyAll</span><span class="p">()</span></div>
     
     <span class="c1">#TODO: modifica di variabili senza sincronizzazione, è quello che vogliamo?</span>
-<div class="viewcode-block" id="Controller.stop"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.Controller.stop">[docs]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Controller.stop"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.stop">[docs]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">playButton</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span> <span class="n">state</span> <span class="o">=</span> <span class="s1">&#39;normal&#39;</span> <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nextStepButton</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span> <span class="n">state</span> <span class="o">=</span> <span class="s1">&#39;normal&#39;</span> <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">isStopped</span> <span class="o">=</span> <span class="kc">True</span>
@@ -195,16 +195,16 @@
         <span class="k">for</span> <span class="n">lock</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lockContainer</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="n">lock</span><span class="o">.</span><span class="n">playController</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span></div>
     
-<div class="viewcode-block" id="Controller.nextStep"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.Controller.nextStep">[docs]</a>    <span class="k">def</span> <span class="nf">nextStep</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Controller.nextStep"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.nextStep">[docs]</a>    <span class="k">def</span> <span class="nf">nextStep</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">stepLock</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">stepCondition</span><span class="o">.</span><span class="n">notifyAll</span><span class="p">()</span></div>
     
     <span class="c1">#no synchronization (look to StopAndPlay.run)</span>
-<div class="viewcode-block" id="Controller.decreaseStep"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.Controller.decreaseStep">[docs]</a>    <span class="k">def</span> <span class="nf">decreaseStep</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Controller.decreaseStep"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.decreaseStep">[docs]</a>    <span class="k">def</span> <span class="nf">decreaseStep</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">-=</span> <span class="mi">1</span></div>
 
-<div class="viewcode-block" id="Controller.changeThreadName"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.Controller.changeThreadName">[docs]</a>    <span class="k">def</span> <span class="nf">changeThreadName</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">textField</span><span class="p">,</span> <span class="n">menu</span><span class="p">,</span> <span class="n">button</span> <span class="p">):</span>
+<div class="viewcode-block" id="Controller.changeThreadName"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.changeThreadName">[docs]</a>    <span class="k">def</span> <span class="nf">changeThreadName</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">textField</span><span class="p">,</span> <span class="n">menu</span><span class="p">,</span> <span class="n">button</span> <span class="p">):</span>
         <span class="n">threads</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">thread</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">threads</span><span class="p">:</span>
             <span class="n">threads</span><span class="p">[</span> <span class="n">thread</span><span class="o">.</span><span class="n">getName</span><span class="p">()</span> <span class="p">]</span> <span class="o">=</span> <span class="n">thread</span>
@@ -217,7 +217,7 @@
         <span class="n">button</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span> <span class="n">state</span> <span class="o">=</span> <span class="s1">&#39;disabled&#39;</span> <span class="p">)</span>
         <span class="n">textField</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span> <span class="n">state</span> <span class="o">=</span> <span class="s1">&#39;disabled&#39;</span> <span class="p">)</span></div>
         
-<div class="viewcode-block" id="Controller.createPopupThread"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.Controller.createPopupThread">[docs]</a>    <span class="k">def</span> <span class="nf">createPopupThread</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+<div class="viewcode-block" id="Controller.createPopupThread"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.createPopupThread">[docs]</a>    <span class="k">def</span> <span class="nf">createPopupThread</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
         <span class="n">popup</span> <span class="o">=</span> <span class="n">Toplevel</span><span class="p">()</span>
         <span class="n">popup</span><span class="o">.</span><span class="n">title</span><span class="p">(</span> <span class="s1">&#39;Change thread name&#39;</span> <span class="p">)</span>
         <span class="n">popup</span><span class="o">.</span><span class="n">geometry</span><span class="p">(</span> <span class="s1">&#39;400x200&#39;</span> <span class="p">)</span>
@@ -236,12 +236,12 @@
         <span class="n">menu</span><span class="o">.</span><span class="n">add_cascade</span><span class="p">(</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;Select thread&#39;</span><span class="p">,</span> <span class="n">menu</span> <span class="o">=</span> <span class="n">threadBar</span> <span class="p">)</span>       
         <span class="n">popup</span><span class="o">.</span><span class="n">mainloop</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Controller.setLabel"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.Controller.setLabel">[docs]</a>    <span class="k">def</span> <span class="nf">setLabel</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">textField</span><span class="p">,</span> <span class="n">button</span> <span class="p">):</span>
+<div class="viewcode-block" id="Controller.setLabel"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.setLabel">[docs]</a>    <span class="k">def</span> <span class="nf">setLabel</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">textField</span><span class="p">,</span> <span class="n">button</span> <span class="p">):</span>
         <span class="n">label</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span> <span class="n">text</span> <span class="o">=</span> <span class="n">text</span> <span class="p">)</span>
         <span class="n">textField</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span> <span class="n">state</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span> <span class="p">)</span>
         <span class="n">button</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span> <span class="n">state</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span> <span class="p">)</span></div>
 
-<div class="viewcode-block" id="Controller.createPopupLock"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.Controller.createPopupLock">[docs]</a>    <span class="k">def</span> <span class="nf">createPopupLock</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">label</span> <span class="p">):</span>
+<div class="viewcode-block" id="Controller.createPopupLock"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.createPopupLock">[docs]</a>    <span class="k">def</span> <span class="nf">createPopupLock</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">label</span> <span class="p">):</span>
         <span class="n">popup</span> <span class="o">=</span> <span class="n">Toplevel</span><span class="p">()</span>
         <span class="n">popup</span><span class="o">.</span><span class="n">title</span><span class="p">(</span> <span class="n">label</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span> <span class="p">)</span>
         <span class="n">popup</span><span class="o">.</span><span class="n">geometry</span><span class="p">(</span> <span class="s1">&#39;400x100&#39;</span> <span class="p">)</span>
@@ -251,15 +251,15 @@
         <span class="n">createAndEmplaceButton</span><span class="p">(</span> <span class="n">popup</span><span class="p">,</span> <span class="s1">&#39;Change name&#39;</span><span class="p">,</span> <span class="n">buttonCommand</span><span class="p">,</span> <span class="n">relx</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">rely</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">anchor</span> <span class="o">=</span> <span class="s1">&#39;s&#39;</span> <span class="p">)</span>
         <span class="n">popup</span><span class="o">.</span><span class="n">mainloop</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Controller.addThread"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.Controller.addThread">[docs]</a>    <span class="k">def</span> <span class="nf">addThread</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">thread</span> <span class="p">):</span>
+<div class="viewcode-block" id="Controller.addThread"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.addThread">[docs]</a>    <span class="k">def</span> <span class="nf">addThread</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">thread</span> <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">threads</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">thread</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Controller.setLockName"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.Controller.setLockName">[docs]</a>    <span class="k">def</span> <span class="nf">setLockName</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">lock</span><span class="p">,</span> <span class="n">name</span> <span class="p">):</span>
+<div class="viewcode-block" id="Controller.setLockName"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.setLockName">[docs]</a>    <span class="k">def</span> <span class="nf">setLockName</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">lock</span><span class="p">,</span> <span class="n">name</span> <span class="p">):</span>
         <span class="n">lock_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lockContainer</span><span class="p">[</span><span class="n">lock</span><span class="p">]</span>
         <span class="n">lock_label</span> <span class="o">=</span> <span class="n">lock_data</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
         <span class="n">lock_label</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span> <span class="n">text</span> <span class="o">=</span> <span class="n">name</span> <span class="p">)</span></div>
 
-<div class="viewcode-block" id="Controller.addLock"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.Controller.addLock">[docs]</a>    <span class="k">def</span> <span class="nf">addLock</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">lock</span> <span class="p">):</span>
+<div class="viewcode-block" id="Controller.addLock"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.addLock">[docs]</a>    <span class="k">def</span> <span class="nf">addLock</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">lock</span> <span class="p">):</span>
         <span class="c1">### creo il container e lo aggiungo alla lista di container ###</span>
         
         <span class="n">container</span> <span class="o">=</span> <span class="n">Canvas</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">primaryCanvas</span><span class="p">,</span> <span class="n">background</span> <span class="o">=</span> <span class="s1">&#39;white&#39;</span><span class="p">,</span> <span class="n">highlightthickness</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">highlightbackground</span> <span class="o">=</span> <span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">containerHeight</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">containerWidth</span> <span class="p">)</span>
@@ -302,7 +302,7 @@
         <span class="c1">### aggiorno le variabili per il posizionamento ###</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">currentOrientPosition</span> <span class="o">+=</span> <span class="mi">1</span></div>
         
-<div class="viewcode-block" id="Controller.addCondition"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.Controller.addCondition">[docs]</a>    <span class="k">def</span> <span class="nf">addCondition</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">,</span> <span class="n">lock</span> <span class="p">):</span>
+<div class="viewcode-block" id="Controller.addCondition"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.addCondition">[docs]</a>    <span class="k">def</span> <span class="nf">addCondition</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">,</span> <span class="n">lock</span> <span class="p">):</span>
         <span class="c1">### prendo il container principale del lock a cui è associata la condition ###</span>
         <span class="n">container_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lockContainer</span><span class="p">[</span> <span class="n">lock</span> <span class="p">]</span>
         <span class="n">lock_container</span> <span class="o">=</span> <span class="n">container_data</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
@@ -342,7 +342,7 @@
         <span class="n">conditionContainers</span><span class="p">[</span> <span class="n">condition</span> <span class="p">]</span> <span class="o">=</span> <span class="n">conditionData</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">conditions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">conditionContainer</span> <span class="p">)</span></div>
 
-<div class="viewcode-block" id="Controller.setConditionName"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.Controller.setConditionName">[docs]</a>    <span class="k">def</span> <span class="nf">setConditionName</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">,</span> <span class="n">lock</span><span class="p">,</span> <span class="n">name</span> <span class="p">):</span>
+<div class="viewcode-block" id="Controller.setConditionName"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.setConditionName">[docs]</a>    <span class="k">def</span> <span class="nf">setConditionName</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">,</span> <span class="n">lock</span><span class="p">,</span> <span class="n">name</span> <span class="p">):</span>
         <span class="n">lock_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lockContainer</span><span class="p">[</span> <span class="n">lock</span> <span class="p">]</span>
         <span class="n">conditionContainer</span> <span class="o">=</span> <span class="n">lock_data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
         <span class="n">conditionContainer</span><span class="p">[</span> <span class="n">condition</span> <span class="p">]</span><span class="o">.</span><span class="n">setConditionLabel</span><span class="p">(</span> <span class="n">name</span> <span class="p">)</span></div>
@@ -442,7 +442,7 @@
                     <span class="n">container</span><span class="o">.</span><span class="n">itemconfigure</span><span class="p">(</span><span class="s1">&#39;greyRedSem&#39;</span><span class="p">,</span><span class="n">state</span><span class="o">=</span><span class="s1">&#39;normal&#39;</span><span class="p">)</span>         
                     <span class="n">container</span><span class="o">.</span><span class="n">itemconfigure</span><span class="p">(</span><span class="s1">&#39;greyGreenSem&#39;</span><span class="p">,</span><span class="n">state</span><span class="o">=</span><span class="s2">&quot;hidden&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Controller.setWaitThread"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.Controller.setWaitThread">[docs]</a>    <span class="k">def</span> <span class="nf">setWaitThread</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">thread</span><span class="p">,</span> <span class="n">lock</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<div class="viewcode-block" id="Controller.setWaitThread"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.setWaitThread">[docs]</a>    <span class="k">def</span> <span class="nf">setWaitThread</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">thread</span><span class="p">,</span> <span class="n">lock</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
         
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">started</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">startLock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
@@ -471,7 +471,7 @@
         <span class="n">sleepTime</span> <span class="o">=</span> <span class="p">(</span> <span class="n">height</span> <span class="o">+</span> <span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">primaryCanvas</span><span class="o">.</span><span class="n">winfo_width</span><span class="p">()</span><span class="o">/</span><span class="mi">2</span> <span class="p">)</span> <span class="o">-</span> <span class="p">(</span> <span class="p">(</span><span class="mi">30</span><span class="o">/</span><span class="mi">100</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">primaryCanvas</span><span class="o">.</span><span class="n">winfo_width</span><span class="p">()</span> <span class="p">)</span> <span class="p">)</span><span class="o">/</span><span class="mi">100</span> 
         <span class="k">return</span> <span class="n">sleepTime</span></div>
     
-<div class="viewcode-block" id="Controller.setAcquireThread"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.Controller.setAcquireThread">[docs]</a>    <span class="k">def</span> <span class="nf">setAcquireThread</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">thread</span><span class="p">,</span> <span class="n">lock</span> <span class="p">):</span>
+<div class="viewcode-block" id="Controller.setAcquireThread"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.setAcquireThread">[docs]</a>    <span class="k">def</span> <span class="nf">setAcquireThread</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">thread</span><span class="p">,</span> <span class="n">lock</span> <span class="p">):</span>
         
         <span class="n">container_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lockContainer</span><span class="p">[</span><span class="n">lock</span><span class="p">]</span>
         
@@ -490,7 +490,7 @@
         <span class="n">lock_container</span><span class="o">.</span><span class="n">itemconfigure</span><span class="p">(</span> <span class="s1">&#39;greyRedSem&#39;</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="s2">&quot;hidden&quot;</span> <span class="p">)</span>
         <span class="n">lock_container</span><span class="o">.</span><span class="n">itemconfigure</span><span class="p">(</span> <span class="s1">&#39;redSem&#39;</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span> <span class="p">)</span></div>
     
-<div class="viewcode-block" id="Controller.setAcquireThreadFromCondition"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.Controller.setAcquireThreadFromCondition">[docs]</a>    <span class="k">def</span> <span class="nf">setAcquireThreadFromCondition</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">thread</span><span class="p">,</span> <span class="n">lock</span><span class="p">,</span> <span class="n">condition</span> <span class="p">):</span>
+<div class="viewcode-block" id="Controller.setAcquireThreadFromCondition"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.setAcquireThreadFromCondition">[docs]</a>    <span class="k">def</span> <span class="nf">setAcquireThreadFromCondition</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">thread</span><span class="p">,</span> <span class="n">lock</span><span class="p">,</span> <span class="n">condition</span> <span class="p">):</span>
         <span class="n">tag</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="n">thread</span><span class="o">.</span><span class="n">ident</span> <span class="p">)</span>
         <span class="n">container_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lockContainer</span><span class="p">[</span><span class="n">lock</span><span class="p">]</span>
         <span class="n">conditionContainer</span> <span class="o">=</span> <span class="n">container_data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
@@ -505,7 +505,7 @@
         <span class="n">lock_container</span><span class="o">.</span><span class="n">itemconfigure</span><span class="p">(</span> <span class="s1">&#39;greyRedSem&#39;</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="s2">&quot;hidden&quot;</span> <span class="p">)</span>
         <span class="n">lock_container</span><span class="o">.</span><span class="n">itemconfigure</span><span class="p">(</span> <span class="s1">&#39;redSem&#39;</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span> <span class="p">)</span></div>
 
-<div class="viewcode-block" id="Controller.setThreadInCondition"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.Controller.setThreadInCondition">[docs]</a>    <span class="k">def</span> <span class="nf">setThreadInCondition</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">thread</span><span class="p">,</span> <span class="n">lock</span><span class="p">,</span> <span class="n">condition</span> <span class="p">):</span>
+<div class="viewcode-block" id="Controller.setThreadInCondition"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.setThreadInCondition">[docs]</a>    <span class="k">def</span> <span class="nf">setThreadInCondition</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">thread</span><span class="p">,</span> <span class="n">lock</span><span class="p">,</span> <span class="n">condition</span> <span class="p">):</span>
         <span class="n">container_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lockContainer</span><span class="p">[</span><span class="n">lock</span><span class="p">]</span>
         <span class="n">conditionContainers</span> <span class="o">=</span> <span class="n">container_data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
         <span class="n">conditionData</span> <span class="o">=</span> <span class="n">conditionContainers</span><span class="p">[</span><span class="n">condition</span><span class="p">]</span>
@@ -517,7 +517,7 @@
         <span class="n">lock_container</span><span class="o">.</span><span class="n">itemconfigure</span><span class="p">(</span> <span class="s1">&#39;greyGreenSem&#39;</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="s2">&quot;hidden&quot;</span> <span class="p">)</span>
         <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Controller.setReleaseThread"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.Controller.setReleaseThread">[docs]</a>    <span class="k">def</span> <span class="nf">setReleaseThread</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">thread</span><span class="p">,</span> <span class="n">lock</span> <span class="p">):</span>
+<div class="viewcode-block" id="Controller.setReleaseThread"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.setReleaseThread">[docs]</a>    <span class="k">def</span> <span class="nf">setReleaseThread</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">thread</span><span class="p">,</span> <span class="n">lock</span> <span class="p">):</span>
         <span class="n">container_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lockContainer</span><span class="p">[</span><span class="n">lock</span><span class="p">]</span>
         <span class="n">lock_container</span> <span class="o">=</span> <span class="n">container_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">height</span> <span class="o">=</span> <span class="n">container_data</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">+</span><span class="p">(</span> <span class="p">(</span><span class="mi">50</span><span class="o">/</span><span class="mi">100</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">containerHeight</span> <span class="p">)</span>
@@ -543,12 +543,12 @@
         
         <span class="k">return</span> <span class="n">sleepTime</span></div>
         
-<div class="viewcode-block" id="Controller.drawFutureLockThread"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.Controller.drawFutureLockThread">[docs]</a>    <span class="k">def</span> <span class="nf">drawFutureLockThread</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">thread</span><span class="p">,</span> <span class="n">lock</span> <span class="p">):</span>
+<div class="viewcode-block" id="Controller.drawFutureLockThread"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.drawFutureLockThread">[docs]</a>    <span class="k">def</span> <span class="nf">drawFutureLockThread</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">thread</span><span class="p">,</span> <span class="n">lock</span> <span class="p">):</span>
         <span class="n">container_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lockContainer</span><span class="p">[</span><span class="n">lock</span><span class="p">]</span>
         <span class="n">wait_data</span> <span class="o">=</span> <span class="n">container_data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">wait_data</span><span class="o">.</span><span class="n">drawFutureAcquireThread</span><span class="p">(</span><span class="n">thread</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Controller.notifyLock"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.Controller.notifyLock">[docs]</a>    <span class="k">def</span> <span class="nf">notifyLock</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">lock</span><span class="p">,</span><span class="n">condition</span><span class="p">,</span><span class="n">isAll</span><span class="p">):</span>
+<div class="viewcode-block" id="Controller.notifyLock"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.notifyLock">[docs]</a>    <span class="k">def</span> <span class="nf">notifyLock</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">lock</span><span class="p">,</span><span class="n">condition</span><span class="p">,</span><span class="n">isAll</span><span class="p">):</span>
         <span class="n">container_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lockContainer</span><span class="p">[</span><span class="n">lock</span><span class="p">]</span>
         <span class="n">conditionContainer</span> <span class="o">=</span> <span class="n">container_data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
         <span class="n">conditionData</span> <span class="o">=</span> <span class="n">conditionContainer</span><span class="p">[</span><span class="n">condition</span><span class="p">]</span>
@@ -572,7 +572,7 @@
             <span class="n">container</span><span class="o">.</span><span class="n">itemconfigure</span><span class="p">(</span><span class="s1">&#39;greyRedSem&#39;</span><span class="p">,</span><span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">)</span> 
             <span class="n">container</span><span class="o">.</span><span class="n">after</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">__blinkLock</span><span class="p">,</span><span class="n">container</span><span class="p">,</span> <span class="ow">not</span> <span class="n">currentState</span><span class="p">,</span><span class="n">lock</span><span class="p">)</span>
         
-<div class="viewcode-block" id="Controller.update"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.Controller.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Controller.update"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">primaryCanvas</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">scrollregion</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">primaryCanvas</span><span class="o">.</span><span class="n">bbox</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inactiveCanvas</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">scrollregion</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inactiveCanvas</span><span class="o">.</span><span class="n">bbox</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">))</span> 
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">waitContainer</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
@@ -581,7 +581,7 @@
             <span class="n">container</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">scrollregion</span><span class="o">=</span><span class="n">container</span><span class="o">.</span><span class="n">bbox</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">after</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">)</span></div>
     
-<div class="viewcode-block" id="Controller.start"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.Controller.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Controller.start"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">startLock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lockContainer</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
@@ -614,7 +614,7 @@
             <span class="n">thread</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
 
     <span class="c1">#no synchronization (look to StopAndPlay.run)</span>
-<div class="viewcode-block" id="Controller.checkIfStopped"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.Controller.checkIfStopped">[docs]</a>    <span class="k">def</span> <span class="nf">checkIfStopped</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checkStepsToo</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="Controller.checkIfStopped"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.checkIfStopped">[docs]</a>    <span class="k">def</span> <span class="nf">checkIfStopped</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checkStepsToo</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">checkStepsToo</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">isStopped</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">&lt;=</span> <span class="mi">0</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">isStopped</span></div></div>
@@ -623,10 +623,16 @@
 <span class="sd">lock e condition globali per sincronizzare threading e vista</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="n">stepLock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">lock e condition globali per sincronizzare threading e vista</span>
+<span class="sd">&quot;&quot;&quot;</span>
 <span class="n">stepCondition</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Condition</span><span class="p">(</span><span class="n">stepLock</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">lock e condition globali per sincronizzare threading e vista</span>
+<span class="sd">&quot;&quot;&quot;</span>
 <span class="n">controller</span> <span class="o">=</span> <span class="n">Controller</span><span class="p">(</span><span class="n">stepLock</span><span class="p">,</span> <span class="n">stepCondition</span><span class="p">)</span>
 
-<div class="viewcode-block" id="startGraph"><a class="viewcode-back" href="../../../threadmonitor.controller.html#threadmonitor.controller.controller.startGraph">[docs]</a><span class="k">def</span> <span class="nf">startGraph</span><span class="p">():</span>
+<div class="viewcode-block" id="startGraph"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.startGraph">[docs]</a><span class="k">def</span> <span class="nf">startGraph</span><span class="p">():</span>
     <span class="n">controller</span><span class="o">.</span><span class="n">start</span><span class="p">()</span></div>
 </pre></div>
 
@@ -634,7 +640,7 @@
       <div class="bottomnav" role="navigation" aria-label="bottom navigation">
       
         <p>
-        <a class="uplink" href="../../../index.html">Contents</a>
+        <a class="uplink" href="../../index.html">Contents</a>
         </p>
 
       </div>

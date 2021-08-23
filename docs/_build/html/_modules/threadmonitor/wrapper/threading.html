@@ -32,11 +32,47 @@
   <h1>Source code for threadmonitor.wrapper.threading</h1><div class="highlight"><pre>
 <span></span><span class="c1"># coding=utf-8</span>
 
-<span class="kn">import</span> <span class="nn">threadmonitor.view.tk</span> <span class="k">as</span> <span class="nn">graph_view</span>
+<span class="kn">import</span> <span class="nn">threadmonitor.controller</span> <span class="k">as</span> <span class="nn">control</span>
 <span class="kn">import</span> <span class="nn">threading</span> <span class="k">as</span> <span class="nn">std_threading</span>
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">threadmonitor.wrapper.utils</span> <span class="kn">import</span> <span class="n">_SingletonStopAndPlay</span>
+<span class="kn">from</span> <span class="nn">threadmonitor.utils</span> <span class="kn">import</span> <span class="n">singleton</span>
+
+<span class="k">class</span> <span class="nc">_StopAndPlay</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span> <span class="o">=</span> <span class="n">std_threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">condition</span> <span class="o">=</span> <span class="n">std_threading</span><span class="o">.</span><span class="n">Condition</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stepLock</span> <span class="o">=</span> <span class="n">control</span><span class="o">.</span><span class="n">stepLock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stepCondition</span> <span class="o">=</span> <span class="n">control</span><span class="o">.</span><span class="n">stepCondition</span>
+        <span class="c1">#verificare se è possibile rimuovere questa variabile</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">controller</span> <span class="o">=</span> <span class="n">control</span><span class="o">.</span><span class="n">controller</span>
+    
+    <span class="c1">#TODO: capire il funzionamento di stop</span>
+    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1">#TODO: capire il funzionamento di play</span>
+    <span class="k">def</span> <span class="nf">play</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">notifyAll</span><span class="p">()</span>
+    
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#TODO: acquisizione di un lock &quot;globale&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">stepLock</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">checkIfStopped</span><span class="p">():</span>
+                <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">checkIfStopped</span><span class="p">(</span><span class="n">checkStepsToo</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">stepCondition</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">decreaseStep</span><span class="p">()</span>
+
+
+<span class="nd">@singleton</span>
+<span class="k">class</span> <span class="nc">_SingletonStopAndPlay</span><span class="p">(</span><span class="n">_StopAndPlay</span><span class="p">):</span>
+    <span class="k">pass</span>
+
 
 <div class="viewcode-block" id="Lock"><a class="viewcode-back" href="../../../threadmonitor.wrapper.html#threadmonitor.wrapper.threading.Lock">[docs]</a><span class="k">class</span> <span class="nc">Lock</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -49,7 +85,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">Lock</span><span class="o">.</span><span class="n">__id</span>
         <span class="n">Lock</span><span class="o">.</span><span class="n">__id</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="c1"># view</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">controller</span> <span class="o">=</span> <span class="n">graph_view</span><span class="o">.</span><span class="n">controller</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">controller</span> <span class="o">=</span> <span class="n">control</span><span class="o">.</span><span class="n">controller</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">addLock</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">playController</span> <span class="o">=</span> <span class="n">_SingletonStopAndPlay</span><span class="p">()</span>
         <span class="c1"># wait</span>
@@ -130,7 +166,7 @@
 <span class="sd">        default list of Thread.__init__ function arguments: necessario per garantire la retrocompatibilità</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">group</span> <span class="o">=</span> <span class="n">group</span><span class="p">,</span> <span class="n">target</span> <span class="o">=</span> <span class="n">target</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">,</span> <span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">daemon</span> <span class="o">=</span> <span class="n">daemon</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">controller</span> <span class="o">=</span> <span class="n">graph_view</span><span class="o">.</span><span class="n">controller</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">controller</span> <span class="o">=</span> <span class="n">control</span><span class="o">.</span><span class="n">controller</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">addThread</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
     
     <span class="c1">#TODO: non-compliant colla libreria standard, da decidere come sostituirlo (exceptionhook?)</span>
@@ -147,7 +183,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">lock</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">lock</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">glock</span> <span class="o">=</span> <span class="n">lock</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">controller</span> <span class="o">=</span> <span class="n">graph_view</span><span class="o">.</span><span class="n">controller</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">controller</span> <span class="o">=</span> <span class="n">control</span><span class="o">.</span><span class="n">controller</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">addCondition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">glock</span><span class="p">)</span>
         

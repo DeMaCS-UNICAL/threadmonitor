@@ -1,6 +1,6 @@
 from threadmonitor.wrapper.threading import Lock,Thread,Condition
 from time import sleep
-from threadmonitor.view.tk import startGraph
+from threadmonitor.controller import startGraph
 
 class Structure:
     def __init__(self):

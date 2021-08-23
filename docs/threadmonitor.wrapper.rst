@@ -12,14 +12,6 @@ threadmonitor.wrapper.threading module
    :undoc-members:
    :show-inheritance:
 
-threadmonitor.wrapper.utils module
---------------------------------------
-
-.. automodule:: threadmonitor.wrapper.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Module contents
 ---------------
 

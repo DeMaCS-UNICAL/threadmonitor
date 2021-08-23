@@ -1,10 +1,46 @@
 # coding=utf-8
 
-import threadmonitor.view.tk as graph_view
+import threadmonitor.controller as control
 import threading as std_threading
 import time
 import os
-from threadmonitor.wrapper.utils import _SingletonStopAndPlay
+from threadmonitor.utils import singleton
+
+class _StopAndPlay:
+
+    def __init__(self):
+        self.lock = std_threading.Lock()
+        self.condition = std_threading.Condition(self.lock)
+        self.stepLock = control.stepLock
+        self.stepCondition = control.stepCondition
+        #verificare se è possibile rimuovere questa variabile
+        self.running = True
+        self.controller = control.controllerInstance
+    
+    #TODO: capire il funzionamento di stop
+    def stop(self):
+        with self.lock:
+            self.running = False
+
+    #TODO: capire il funzionamento di play
+    def play(self):
+        with self.lock:
+            self.running = True
+            self.condition.notifyAll()
+    
+    def run(self):
+        #TODO: acquisizione di un lock "globale"
+        with self.stepLock:
+            if self.controller.checkIfStopped():
+                while self.controller.checkIfStopped(checkStepsToo = True):
+                    self.stepCondition.wait()
+                self.controller.decreaseStep()
+
+
+@singleton
+class _SingletonStopAndPlay(_StopAndPlay):
+    pass
+
 
 class Lock():
     """
@@ -17,7 +53,7 @@ class Lock():
         self.id = Lock.__id
         Lock.__id += 1
         # view
-        self.controller = graph_view.controller
+        self.controller = control.controllerInstance
         self.controller.addLock(self)
         self.playController = _SingletonStopAndPlay()
         # wait
@@ -98,7 +134,7 @@ class Thread(std_threading.Thread):
         default list of Thread.__init__ function arguments: necessario per garantire la retrocompatibilità
         """
         super().__init__(group = group, target = target, name = name, args = args, kwargs = kwargs, daemon = daemon)
-        self.controller = graph_view.controller
+        self.controller = control.controllerInstance
         self.controller.addThread(self)
     
     #TODO: non-compliant colla libreria standard, da decidere come sostituirlo (exceptionhook?)
@@ -115,7 +151,7 @@ class Condition(std_threading.Condition):
     def __init__(self,lock = None):
         super().__init__(lock)
         self.glock = lock
-        self.controller = graph_view.controller
+        self.controller = control.controllerInstance
         self.name = ""
         self.controller.addCondition(self,self.glock)
         

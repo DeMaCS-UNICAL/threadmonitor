@@ -15,8 +15,8 @@
     <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="threadmonitor.wrapper package" href="threadmonitor.wrapper.html" />
-    <link rel="prev" title="threadmonitor package" href="threadmonitor.html" /> 
+    <link rel="next" title="threadmonitor.controller package" href="threadmonitor.controller.html" />
+    <link rel="prev" title="threadmonitor.model package" href="threadmonitor.model.html" /> 
   </head><body>
       <div class="header" role="banner"><h1 class="heading"><a href="index.html">
           <span>ThreadMonitor  documentation</span></a></h1>
@@ -25,11 +25,11 @@
       <div class="topnav" role="navigation" aria-label="top navigation">
       
         <p>
-        «&#160;&#160;<a href="threadmonitor.html">threadmonitor package</a>
+        «&#160;&#160;<a href="threadmonitor.model.html">threadmonitor.model package</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="threadmonitor.wrapper.html">threadmonitor.wrapper package</a>&#160;&#160;»
+        <a href="threadmonitor.controller.html">threadmonitor.controller package</a>&#160;&#160;»
         </p>
 
       </div>
@@ -131,152 +131,58 @@
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">threadmonitor.view.tk.</span></span><span class="sig-name descname"><span class="pre">Controller</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stepLock</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">_thread.allocate_lock</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stepCondition</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">threading.Condition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#Controller"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.Controller" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="threadmonitor.view.tk.InactiveContainer">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">threadmonitor.view.tk.</span></span><span class="sig-name descname"><span class="pre">InactiveContainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inactiveContainer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#InactiveContainer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.InactiveContainer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.DESTRA">
-<span class="sig-name descname"><span class="pre">DESTRA</span></span><em class="property"> <span class="pre">=</span> <span class="pre">1</span></em><a class="headerlink" href="#threadmonitor.view.tk.Controller.DESTRA" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.FINISH">
-<span class="sig-name descname"><span class="pre">FINISH</span></span><em class="property"> <span class="pre">=</span> <span class="pre">False</span></em><a class="headerlink" href="#threadmonitor.view.tk.Controller.FINISH" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.INDEX_LOCK_CONTAINER">
-<span class="sig-name descname"><span class="pre">INDEX_LOCK_CONTAINER</span></span><em class="property"> <span class="pre">=</span> <span class="pre">1</span></em><a class="headerlink" href="#threadmonitor.view.tk.Controller.INDEX_LOCK_CONTAINER" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.INDEX_WAIT_CONTAINER">
-<span class="sig-name descname"><span class="pre">INDEX_WAIT_CONTAINER</span></span><em class="property"> <span class="pre">=</span> <span class="pre">1</span></em><a class="headerlink" href="#threadmonitor.view.tk.Controller.INDEX_WAIT_CONTAINER" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.SINISTRA">
-<span class="sig-name descname"><span class="pre">SINISTRA</span></span><em class="property"> <span class="pre">=</span> <span class="pre">0</span></em><a class="headerlink" href="#threadmonitor.view.tk.Controller.SINISTRA" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="threadmonitor.view.tk.InactiveContainer.addThreadInactive">
+<span class="sig-name descname"><span class="pre">addThreadInactive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thread</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#InactiveContainer.addThreadInactive"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.InactiveContainer.addThreadInactive" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.addCondition">
-<span class="sig-name descname"><span class="pre">addCondition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">condition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#Controller.addCondition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.Controller.addCondition" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="threadmonitor.view.tk.InactiveContainer.drawNewThread">
+<span class="sig-name descname"><span class="pre">drawNewThread</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thread</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#InactiveContainer.drawNewThread"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.InactiveContainer.drawNewThread" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.addLock">
-<span class="sig-name descname"><span class="pre">addLock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lock</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#Controller.addLock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.Controller.addLock" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="threadmonitor.view.tk.InactiveContainer.redrawThread">
+<span class="sig-name descname"><span class="pre">redrawThread</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#InactiveContainer.redrawThread"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.InactiveContainer.redrawThread" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.addThread">
-<span class="sig-name descname"><span class="pre">addThread</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thread</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#Controller.addThread"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.Controller.addThread" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="threadmonitor.view.tk.InactiveContainer.removeThreadInactive">
+<span class="sig-name descname"><span class="pre">removeThreadInactive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threadObject</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#InactiveContainer.removeThreadInactive"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.InactiveContainer.removeThreadInactive" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="threadmonitor.view.tk.WaitContainer">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">threadmonitor.view.tk.</span></span><span class="sig-name descname"><span class="pre">WaitContainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wait_container</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tkinter.Canvas</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imageHeight</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#WaitContainer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.WaitContainer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="threadmonitor.view.tk.WaitContainer.addThreadInWait">
+<span class="sig-name descname"><span class="pre">addThreadInWait</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thread</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#WaitContainer.addThreadInWait"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.WaitContainer.addThreadInWait" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.changeThreadName">
-<span class="sig-name descname"><span class="pre">changeThreadName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">textField</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">menu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">button</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#Controller.changeThreadName"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.Controller.changeThreadName" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="threadmonitor.view.tk.WaitContainer.drawFutureAcquireThread">
+<span class="sig-name descname"><span class="pre">drawFutureAcquireThread</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thread</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#WaitContainer.drawFutureAcquireThread"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.WaitContainer.drawFutureAcquireThread" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.checkIfStopped">
-<span class="sig-name descname"><span class="pre">checkIfStopped</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">checkStepsToo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#Controller.checkIfStopped"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.Controller.checkIfStopped" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="threadmonitor.view.tk.WaitContainer.drawNewThread">
+<span class="sig-name descname"><span class="pre">drawNewThread</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thread</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#WaitContainer.drawNewThread"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.WaitContainer.drawNewThread" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.createPopupLock">
-<span class="sig-name descname"><span class="pre">createPopupLock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#Controller.createPopupLock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.Controller.createPopupLock" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="threadmonitor.view.tk.WaitContainer.redrawThread">
+<span class="sig-name descname"><span class="pre">redrawThread</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#WaitContainer.redrawThread"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.WaitContainer.redrawThread" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.createPopupThread">
-<span class="sig-name descname"><span class="pre">createPopupThread</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#Controller.createPopupThread"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.Controller.createPopupThread" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.decreaseStep">
-<span class="sig-name descname"><span class="pre">decreaseStep</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#Controller.decreaseStep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.Controller.decreaseStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.drawFutureLockThread">
-<span class="sig-name descname"><span class="pre">drawFutureLockThread</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thread</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#Controller.drawFutureLockThread"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.Controller.drawFutureLockThread" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.isStopped">
-<span class="sig-name descname"><span class="pre">isStopped</span></span><em class="property"> <span class="pre">=</span> <span class="pre">False</span></em><a class="headerlink" href="#threadmonitor.view.tk.Controller.isStopped" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.nextStep">
-<span class="sig-name descname"><span class="pre">nextStep</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#Controller.nextStep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.Controller.nextStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.notifyLock">
-<span class="sig-name descname"><span class="pre">notifyLock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lock</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isAll</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#Controller.notifyLock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.Controller.notifyLock" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.play">
-<span class="sig-name descname"><span class="pre">play</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#Controller.play"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.Controller.play" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.setAcquireThread">
-<span class="sig-name descname"><span class="pre">setAcquireThread</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thread</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#Controller.setAcquireThread"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.Controller.setAcquireThread" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.setAcquireThreadFromCondition">
-<span class="sig-name descname"><span class="pre">setAcquireThreadFromCondition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thread</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#Controller.setAcquireThreadFromCondition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.Controller.setAcquireThreadFromCondition" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.setConditionName">
-<span class="sig-name descname"><span class="pre">setConditionName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">condition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#Controller.setConditionName"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.Controller.setConditionName" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.setLabel">
-<span class="sig-name descname"><span class="pre">setLabel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">textField</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">button</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#Controller.setLabel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.Controller.setLabel" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.setLockName">
-<span class="sig-name descname"><span class="pre">setLockName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lock</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#Controller.setLockName"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.Controller.setLockName" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.setReleaseThread">
-<span class="sig-name descname"><span class="pre">setReleaseThread</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thread</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#Controller.setReleaseThread"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.Controller.setReleaseThread" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.setThreadInCondition">
-<span class="sig-name descname"><span class="pre">setThreadInCondition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thread</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#Controller.setThreadInCondition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.Controller.setThreadInCondition" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.setWaitThread">
-<span class="sig-name descname"><span class="pre">setWaitThread</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thread</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#Controller.setWaitThread"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.Controller.setWaitThread" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.start">
-<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#Controller.start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.Controller.start" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.stop">
-<span class="sig-name descname"><span class="pre">stop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#Controller.stop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.Controller.stop" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.Controller.update">
-<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#Controller.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.Controller.update" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="threadmonitor.view.tk.WaitContainer.removeThreadInWait">
+<span class="sig-name descname"><span class="pre">removeThreadInWait</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threadObject</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#WaitContainer.removeThreadInWait"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.WaitContainer.removeThreadInWait" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -291,19 +197,6 @@
 <span class="sig-prename descclassname"><span class="pre">threadmonitor.view.tk.</span></span><span class="sig-name descname"><span class="pre">getPhotoImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resourceName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resizeParams</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">master</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">PIL.ImageTk.PhotoImage</span></span></span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#getPhotoImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.getPhotoImage" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="threadmonitor.view.tk.startGraph">
-<span class="sig-prename descclassname"><span class="pre">threadmonitor.view.tk.</span></span><span class="sig-name descname"><span class="pre">startGraph</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/threadmonitor/view/tk.html#startGraph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.tk.startGraph" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</section>
-<section id="module-threadmonitor.view.utils">
-<span id="threadmonitor-view-utils-module"></span><h2>threadmonitor.view.utils module<a class="headerlink" href="#module-threadmonitor.view.utils" title="Permalink to this headline">¶</a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="threadmonitor.view.utils.getResourceFromName">
-<span class="sig-prename descclassname"><span class="pre">threadmonitor.view.utils.</span></span><span class="sig-name descname"><span class="pre">getResourceFromName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/threadmonitor/view/utils.html#getResourceFromName"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#threadmonitor.view.utils.getResourceFromName" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 </section>
 <section id="module-threadmonitor.view">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-threadmonitor.view" title="Permalink to this headline">¶</a></h2>
@@ -316,11 +209,11 @@
       <div class="bottomnav" role="navigation" aria-label="bottom navigation">
       
         <p>
-        «&#160;&#160;<a href="threadmonitor.html">threadmonitor package</a>
+        «&#160;&#160;<a href="threadmonitor.model.html">threadmonitor.model package</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="threadmonitor.wrapper.html">threadmonitor.wrapper package</a>&#160;&#160;»
+        <a href="threadmonitor.controller.html">threadmonitor.controller package</a>&#160;&#160;»
         </p>
 
       </div>

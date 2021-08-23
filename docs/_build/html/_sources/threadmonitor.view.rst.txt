@@ -12,14 +12,6 @@ threadmonitor.view.tk module
    :undoc-members:
    :show-inheritance:
 
-threadmonitor.view.utils module
--------------------------------------
-
-.. automodule:: threadmonitor.view.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Module contents
 ---------------
 

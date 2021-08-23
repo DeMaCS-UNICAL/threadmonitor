@@ -49,3 +49,8 @@ Changelog:
 - KNOWN ISSUES 
     - found dependency between view submodule and wrapper submodule in _InactiveContainer.drawNewThread()
     - the wrapper.threading.Lock.releaseLock (used in drawNewThread) seems to affect the distribution of threads across locks
+- created utils submodule and updated docs accordingly
+- minimal changes to ease syntax on imports
+- updated readme.md
+- renamed _InactiveContainer to InactiveContainer
+- renamed _WaitContainer to InactiveContainer

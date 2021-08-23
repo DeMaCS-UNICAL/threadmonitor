@@ -1,6 +1,6 @@
 from threadmonitor.wrapper.threading import Lock, Thread, Condition, get_ident
 from time import sleep
-from threadmonitor.view.tk import startGraph
+from threadmonitor.controller import startGraph
 import threading
 
 printLock = threading.Lock()

@@ -11,6 +11,7 @@ Subpackages
    threadmonitor.model
    threadmonitor.view
    threadmonitor.controller
+   threadmonitor.utils
 
 Module contents
 ---------------

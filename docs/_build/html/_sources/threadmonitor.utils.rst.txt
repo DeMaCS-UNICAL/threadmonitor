@@ -1,10 +1,10 @@
-threadmonitor.model package
+threadmonitor.utils package
 ===========================
 
 Module contents
 ---------------
 
-.. automodule:: threadmonitor.model
+.. automodule:: threadmonitor.utils
    :members:
    :undoc-members:
    :show-inheritance:
