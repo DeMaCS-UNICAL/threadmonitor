@@ -56,6 +56,12 @@ if __name__ == "__main__":
 pipenv run install
 ```
 
+> using pipenv (alternative):
+
+```shell
+py -m pipenv run install
+```
+
 > using pip:
 
 ```shell
