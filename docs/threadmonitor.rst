@@ -7,9 +7,10 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   threadmonitor.view
    threadmonitor.wrapper
    threadmonitor.model
+   threadmonitor.view
+   threadmonitor.controller
 
 Module contents
 ---------------

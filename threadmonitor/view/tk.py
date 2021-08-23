@@ -2,7 +2,7 @@
 
 from tkinter import ttk
 from tkinter import *
-from typing import Optional
+from typing import Any, Optional, Tuple
 from PIL import ImageTk
 import threading
 import time
@@ -10,10 +10,69 @@ from functools import partial
 from threadmonitor.view.utils import getResourceFromName
 
 
-def createAndEmplaceButton(master, text, command, relx, rely, anchor, state = 'normal') -> Button:
-    ret = Button(master, text = text, command = command, state = state)
-    ret.place(relx = relx, rely = rely, anchor = anchor)
+def createAndEmplaceButton(master, text, command, **placeArgs) -> Button:
+    ret = Button(master, text = text, command = command)
+    ret.place(**placeArgs)
     return ret
+
+def getPhotoImage(resourceName: str, resizeParams: Tuple[int, int], master) -> ImageTk.PhotoImage:
+    image = ImageTk.Image.open( getResourceFromName(resourceName) )
+    image = image.resize( resizeParams )
+    return ImageTk.PhotoImage( master = master, image = image )
+
+
+class AbstractContainer:
+    def __init__(self, container: Canvas, image: PhotoImage, baseWidth, baseHeight) -> None:
+        self.container = container
+        self.image = image
+
+        self.lock = threading.Lock()
+        self.threads = []
+        self.currentWidth = baseWidth
+        self.currentHeight = baseHeight
+    
+    def add(self, thread, *args, **kwargs) -> None:
+        with self.lock:
+            self.threads.append(thread)
+            self.drawNewThread(thread)
+            self.postAdd(args = args, kwargs = kwargs)
+
+    def remove(self, threadObject) -> None:
+        with self.lock:
+            if self.removeCondition(threadObject):
+                for thread in self.threads:
+                    self.deleteSingle(thread)
+                self.threads.remove(threadObject)
+                self.redrawThreads()
+
+    def redrawThreads(self) -> None:
+        for thread in self.threads:
+            self.redrawSingle(thread)
+        self.updatePosition()
+
+    def drawNewThread(self, thread) -> None:
+        self.redrawSingle(thread)
+
+    def postAdd(self, *args, **kwargs) -> None:
+        return
+
+    def removeCondition(self, obj) -> bool:
+        return True
+
+    def redrawSingle(self, thread) -> None:        
+        tag = str( thread.ident )
+        self.container.create_image( self.currentWidth, self.currentHeight, image = self.image, tag = f'image{ tag }', anchor = 'n' )
+        self.container.create_text( self.currentWidth, self.currentHeight, text = thread.getName(), tag = f'text{ tag }', anchor = 'n' )
+
+    def deleteSingle(self, thread) -> None:
+        tag = str(thread.ident)
+        self.container.delete(f'image{ tag }')
+        self.container.delete(f'text{ tag }')
+
+    def updatePosition(self) -> None:
+        return
+
+    pass
 
 
 class ConditionContainer:
@@ -108,12 +167,16 @@ class _InactiveContainer:
             currentWidth+=100
         self.currentWidth=currentWidth
     
+    #TODO: dipendenza dal wrapper, da risolvere
     def drawNewThread(self,thread,lock):
+        #TODO: verificare perchè è stato aggiunto questo lock e se è possibile toglierlo
         lock.releaseLock.acquire()
+        
         tag = str(thread.ident)
         self.container.create_image(self.currentWidth,30,image=self.image,tag='image'+tag,anchor='n')
-        self.container.create_text(self.currentWidth,100,text=thread.getName(),tag='text'+tag,anchor="n")
+        self.container.create_text(self.currentWidth,100,text=thread.getName(),tag='text'+tag,anchor='n')
         self.currentWidth +=100
+        
         lock.releaseCondition.notify_all()
         lock.isReleased=True
         lock.releaseLock.release()
@@ -266,52 +329,29 @@ class Controller:
         changeThreadButton = Button( self.inactiveCanvas, text = "Change thread name", command = self.createPopupThread )
         changeThreadButton.place( relx = 0.5, rely = 0, anchor = 'n' )
 
-        #changeThreadButton = createAndEmplaceButton(self.inactiveCanvas, "Change thread name", self.createPopupThread, 0.5, 0, 'n')
-
         self.inactiveScroll = ttk.Scrollbar( self.inactiveCanvas, orient = HORIZONTAL, command = self.inactiveCanvas.xview )
         self.inactiveScroll.place( relx = 0.5, rely = 0.93, width = 305, anchor = 'center' )
 
         self.inactiveCanvas.configure( xscrollcommand = self.inactiveScroll.set )
         #self.inactiveCanvas.pack(anchor='center',pady=10)
-        self.background = ImageTk.Image.open( getResourceFromName('background.png') )
-        self.background = self.background.resize( (10000, self.screen_width) )
-        self.background = ImageTk.PhotoImage( master = self.primaryCanvas, image = self.background )
+        self.background = getPhotoImage('background.png', (10000, self.screen_width), self.primaryCanvas)
         #self.primaryCanvas.create_image(0,0,image=self.background,anchor='n')
 
         self.primaryCanvas.create_window( self.screen_width/2, 0, window = self.inactiveCanvas, anchor = 'n' )
 
-        self.playButton = Button( self.primaryCanvas, text = 'play', command = self.play )
-        self.stopButton = Button( self.primaryCanvas, text = 'pause', command = self.stop )
-        self.nextStepButton = Button( self.primaryCanvas, text = 'next step', command = self.nextStep, state = 'disabled' )
-
-        self.playButton.place( relx = 0.93, rely = 0.02, relheight = 0.025 )
-        self.stopButton.place( relx = 0.93, rely = 0.045, relheight = 0.025 )
-        self.nextStepButton.place( relx = 0.93, rely = 0.070, relheight = 0.025 )
-
-        #self.playButton = createAndEmplaceButton( self.primaryCanvas, 'play', self.play, 0.93, 0.02, 0.025 )
-        #self.stopButton = createAndEmplaceButton( self.primaryCanvas, 'pause', self.stop, 0.93, 0.045, 0.025 )
-        #self.playButton = createAndEmplaceButton( self.primaryCanvas, 'next step', self.nextStep, 0.93, 0.070, 0.025, 'disabled' )
-
+        self.playButton = createAndEmplaceButton( self.primaryCanvas, 'play', self.play, relx = 0.93, rely = 0.02, relheight = 0.025 )
+        self.stopButton = createAndEmplaceButton( self.primaryCanvas, 'pause', self.stop, relx = 0.93, rely = 0.045, relheight = 0.025 )
+        self.nextStepButton = createAndEmplaceButton( self.primaryCanvas, 'next step', self.nextStep, relx = 0.93, rely = 0.070, relheight = 0.025 )
+        self.nextStepButton.configure( state = 'disabled' )
 
         ### Inizializzazioni immagini ###
         self.imageComputerHeight = 32
         self.imageComputerWidth = 32
-        self.computerImage = ImageTk.Image.open( getResourceFromName('computer.png') )
-        self.computerImage = self.computerImage.resize( (self.imageComputerHeight, self.imageComputerHeight) )
-        self.computerImage = ImageTk.PhotoImage( master = self.primaryCanvas, image = self.computerImage )
-        
-        self.redSem = ImageTk.Image.open( getResourceFromName('redSem.png') )
-        self.redSem = self.redSem.resize( (15, 15) )
-        self.redSem = ImageTk.PhotoImage( master = self.primaryCanvas, image = self.redSem )
+        self.computerImage = getPhotoImage( 'computer.png', (self.imageComputerHeight, self.imageComputerHeight), self.primaryCanvas )
+        self.redSem = getPhotoImage( 'redSem.png', (15, 15), self.primaryCanvas )
+        self.greenSem = getPhotoImage( 'greenSem.png', (15, 15), self.primaryCanvas )
+        self.greySem = getPhotoImage( 'greySem.png', (15, 15), self.primaryCanvas )
 
-        self.greenSem = ImageTk.Image.open( getResourceFromName('greenSem.png') )
-        self.greenSem = self.greenSem.resize( (15, 15) )
-        self.greenSem = ImageTk.PhotoImage( master = self.primaryCanvas, image = self.greenSem )
-
-        self.greySem = ImageTk.Image.open( getResourceFromName('greySem.png') )
-        self.greySem = self.greySem.resize( (15, 15) )
-        self.greySem = ImageTk.PhotoImage( master = self.primaryCanvas, image = self.greySem )
-       
         self.window.after( 50,self.update )
         self.window.protocol( 'WM_DELETE_WINDOW', self.__onclose )
         
@@ -369,12 +409,9 @@ class Controller:
         label=Label( popup, text = '' )
         label.place( rely = 0.25, relx = 0.5, anchor = 'n' )
         textField = Text( popup, state='disabled' )
-        textField.place( relx = 0.5, rely = 0.40, relheight = 0.2, relwidth = 0.5, anchor = 'n' )
-        changeThreadNameData = partial( self.changeThreadName, label, textField, threadBar )      
-        button = Button( popup, text = 'Change name' )
-        changeThreadNameData = partial( self.changeThreadName, label, textField, threadBar, button )
-        button.configure( command = changeThreadNameData )
-        button.place( relx = 0.5, rely = 1, anchor = 's' )
+        textField.place( relx = 0.5, rely = 0.40, relheight = 0.2, relwidth = 0.5, anchor = 'n' )      
+        button = createAndEmplaceButton( popup, 'Change name', None, relx = 0.5, rely = 1, anchor = 's')
+        button.configure( command = partial( self.changeThreadName, label, textField, threadBar, button ) )
         for thread in self.threads:
             calling_data = partial( self.setLabel, label, thread.getName(), textField, button )
             threadBar.add_command( label = thread.getName(), command = calling_data )
@@ -392,8 +429,8 @@ class Controller:
         popup.geometry( '400x100' )
         textField = Text( popup )
         textField.place( relx = 0, rely = 0, relheight = 0.5, relwidth = 1 )
-        button = Button( popup, text = 'Change name', command = lambda: ( label.configure( text = textField.get('1.0','end-1c') ) ) )
-        button.place( relx = 0.5, rely = 1, anchor = 's' )
+        buttonCommand = lambda: ( label.configure( text = textField.get('1.0','end-1c') ) )
+        createAndEmplaceButton( popup, 'Change name', buttonCommand, relx = 0.5, rely = 1, anchor = 's' )
         popup.mainloop()
 
     def addThread( self, thread ):
@@ -411,7 +448,7 @@ class Controller:
                 
         self.containers.append( container )
 
-        ### creo il container che mostra il thread che ha acquisito il lok ###
+        ### creo il container che mostra il thread che ha acquisito il lock ###
         lock_container = Canvas( container, background = 'white', width = self.containerWidth, height = self.lockHeight )
         lockLabel = Label( lock_container, text = 'Lock '+ str( lock.getId() ) )
         lockLabel.place( relx = 0.5, rely = 0.80, anchor = 'center' )
@@ -763,14 +800,6 @@ class Controller:
         if checkStepsToo:
             return self.isStopped and self.step <= 0
         return self.isStopped
-
-def singleton(class_):
-    instances = {}
-    def getinstance(*args, **kwargs):
-        if class_ not in instances:
-            instances[class_] = class_(*args, **kwargs)
-        return instances[class_]
-    return getinstance
     
 
 """
