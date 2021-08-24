@@ -31,25 +31,16 @@
         
   <h1>Source code for threadmonitor.controller</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">from</span> <span class="nn">threadmonitor.utils</span> <span class="kn">import</span> <span class="n">singleton</span>
 <span class="kn">from</span> <span class="nn">tkinter</span> <span class="kn">import</span> <span class="n">ttk</span>
 <span class="kn">from</span> <span class="nn">tkinter</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
-<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">ImageTk</span>
 <span class="kn">import</span> <span class="nn">threading</span>
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
-<span class="kn">from</span> <span class="nn">threadmonitor.utils</span> <span class="kn">import</span> <span class="n">getResourceFromName</span>
 <span class="kn">from</span> <span class="nn">threadmonitor.view.tk</span> <span class="kn">import</span> <span class="n">InactiveContainer</span><span class="p">,</span> <span class="n">WaitContainer</span><span class="p">,</span> <span class="n">ConditionContainer</span> 
+<span class="kn">from</span> <span class="nn">threadmonitor.view.tk</span> <span class="kn">import</span> <span class="n">createAndEmplaceButton</span><span class="p">,</span> <span class="n">getPhotoImage</span>
 
-<div class="viewcode-block" id="createAndEmplaceButton"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.createAndEmplaceButton">[docs]</a><span class="k">def</span> <span class="nf">createAndEmplaceButton</span><span class="p">(</span><span class="n">master</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">command</span><span class="p">,</span> <span class="o">**</span><span class="n">placeArgs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Button</span><span class="p">:</span>
-    <span class="n">ret</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">master</span><span class="p">,</span> <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="p">,</span> <span class="n">command</span> <span class="o">=</span> <span class="n">command</span><span class="p">)</span>
-    <span class="n">ret</span><span class="o">.</span><span class="n">place</span><span class="p">(</span><span class="o">**</span><span class="n">placeArgs</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">ret</span></div>
-
-<div class="viewcode-block" id="getPhotoImage"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.getPhotoImage">[docs]</a><span class="k">def</span> <span class="nf">getPhotoImage</span><span class="p">(</span><span class="n">resourceName</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">resizeParams</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">master</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ImageTk</span><span class="o">.</span><span class="n">PhotoImage</span><span class="p">:</span>
-    <span class="n">image</span> <span class="o">=</span> <span class="n">ImageTk</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span> <span class="n">getResourceFromName</span><span class="p">(</span><span class="n">resourceName</span><span class="p">)</span> <span class="p">)</span>
-    <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span> <span class="n">resizeParams</span> <span class="p">)</span>
-    <span class="k">return</span> <span class="n">ImageTk</span><span class="o">.</span><span class="n">PhotoImage</span><span class="p">(</span> <span class="n">master</span> <span class="o">=</span> <span class="n">master</span><span class="p">,</span> <span class="n">image</span> <span class="o">=</span> <span class="n">image</span> <span class="p">)</span></div>
 
 <div class="viewcode-block" id="Controller"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller">[docs]</a><span class="k">class</span> <span class="nc">Controller</span><span class="p">:</span>
     
@@ -60,12 +51,12 @@
     <span class="n">INDEX_LOCK_CONTAINER</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">isStopped</span> <span class="o">=</span> <span class="kc">False</span>
     
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">stepLock</span><span class="p">:</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">,</span> <span class="n">stepCondition</span><span class="p">:</span> <span class="n">threading</span><span class="o">.</span><span class="n">Condition</span> <span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">window</span> <span class="o">=</span> <span class="n">Tk</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">title</span><span class="p">(</span> <span class="s1">&#39;graphthreading&#39;</span> <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">stepLock</span> <span class="o">=</span> <span class="n">stepLock</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">stepCondition</span> <span class="o">=</span> <span class="n">stepCondition</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stepLock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stepCondition</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Condition</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stepLock</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">screen_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">winfo_screenwidth</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">screen_heigth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">winfo_screenheight</span><span class="p">()</span>
@@ -199,10 +190,6 @@
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">stepLock</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">stepCondition</span><span class="o">.</span><span class="n">notifyAll</span><span class="p">()</span></div>
-    
-    <span class="c1">#no synchronization (look to StopAndPlay.run)</span>
-<div class="viewcode-block" id="Controller.decreaseStep"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.decreaseStep">[docs]</a>    <span class="k">def</span> <span class="nf">decreaseStep</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">-=</span> <span class="mi">1</span></div>
 
 <div class="viewcode-block" id="Controller.changeThreadName"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.changeThreadName">[docs]</a>    <span class="k">def</span> <span class="nf">changeThreadName</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">textField</span><span class="p">,</span> <span class="n">menu</span><span class="p">,</span> <span class="n">button</span> <span class="p">):</span>
         <span class="n">threads</span> <span class="o">=</span> <span class="p">{}</span>
@@ -364,7 +351,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">primaryCanvas</span><span class="o">.</span><span class="n">after</span><span class="p">(</span> <span class="mi">10</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__moveFromInactiveToWait</span><span class="p">,</span> <span class="n">thread</span><span class="p">,</span> <span class="n">wait_container</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">orient</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="n">lock</span><span class="p">,</span> <span class="n">startTime</span> <span class="p">)</span>
                 
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">wait_container</span><span class="o">.</span><span class="n">addThreadInWait</span><span class="p">(</span> <span class="n">thread</span><span class="p">,</span> <span class="n">lock</span> <span class="p">)</span>
+                    <span class="n">wait_container</span><span class="o">.</span><span class="n">add</span><span class="p">(</span> <span class="n">thread</span><span class="p">,</span> <span class="n">lock</span> <span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">primaryCanvas</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">primaryCanvas</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span> <span class="sa">f</span><span class="s2">&quot;image</span><span class="si">{</span> <span class="nb">str</span><span class="p">(</span><span class="n">thread</span><span class="o">.</span><span class="n">ident</span><span class="p">)</span> <span class="si">}</span><span class="s2">&quot;</span> <span class="p">)</span>
             
@@ -376,7 +363,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">primaryCanvas</span><span class="o">.</span><span class="n">after</span><span class="p">(</span> <span class="mi">10</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__moveFromInactiveToWait</span><span class="p">,</span> <span class="n">thread</span><span class="p">,</span> <span class="n">wait_container</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">orient</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="n">lock</span><span class="p">,</span> <span class="n">startTime</span> <span class="p">)</span>
             
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">wait_container</span><span class="o">.</span><span class="n">addThreadInWait</span><span class="p">(</span> <span class="n">thread</span><span class="p">,</span> <span class="n">lock</span> <span class="p">)</span>
+                    <span class="n">wait_container</span><span class="o">.</span><span class="n">add</span><span class="p">(</span> <span class="n">thread</span><span class="p">,</span> <span class="n">lock</span> <span class="p">)</span>
                     <span class="n">lock</span><span class="o">.</span><span class="n">canAcquire</span> <span class="o">=</span> <span class="kc">True</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">primaryCanvas</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span> <span class="n">tag</span> <span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">primaryCanvas</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span> <span class="sa">f</span><span class="s2">&quot;image</span><span class="si">{</span> <span class="nb">str</span><span class="p">(</span><span class="n">thread</span><span class="o">.</span><span class="n">ident</span><span class="p">)</span> <span class="si">}</span><span class="s2">&quot;</span> <span class="p">)</span>
@@ -437,7 +424,7 @@
                 <span class="k">else</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">primaryCanvas</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">primaryCanvas</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s1">&#39;inactiveimage&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">thread</span><span class="o">.</span><span class="n">ident</span><span class="p">))</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">inactiveData</span><span class="o">.</span><span class="n">addThreadInactive</span><span class="p">(</span><span class="n">thread</span><span class="p">,</span><span class="n">lock</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">inactiveData</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">thread</span><span class="p">,</span><span class="n">lock</span><span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">releasingLock</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">lock</span><span class="p">)</span>
                     <span class="n">container</span><span class="o">.</span><span class="n">itemconfigure</span><span class="p">(</span><span class="s1">&#39;greyRedSem&#39;</span><span class="p">,</span><span class="n">state</span><span class="o">=</span><span class="s1">&#39;normal&#39;</span><span class="p">)</span>         
                     <span class="n">container</span><span class="o">.</span><span class="n">itemconfigure</span><span class="p">(</span><span class="s1">&#39;greyGreenSem&#39;</span><span class="p">,</span><span class="n">state</span><span class="o">=</span><span class="s2">&quot;hidden&quot;</span><span class="p">)</span>
@@ -466,7 +453,7 @@
 
         <span class="n">timeStart</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__moveFromInactiveToWait</span><span class="p">(</span> <span class="n">thread</span><span class="p">,</span> <span class="n">wait_data</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">orient</span><span class="p">,</span> <span class="n">tag_param</span><span class="p">,</span> <span class="n">lock</span><span class="p">,</span> <span class="n">timeStart</span> <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inactiveData</span><span class="o">.</span><span class="n">removeThreadInactive</span><span class="p">(</span><span class="n">thread</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inactiveData</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">thread</span><span class="p">)</span>
         
         <span class="n">sleepTime</span> <span class="o">=</span> <span class="p">(</span> <span class="n">height</span> <span class="o">+</span> <span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">primaryCanvas</span><span class="o">.</span><span class="n">winfo_width</span><span class="p">()</span><span class="o">/</span><span class="mi">2</span> <span class="p">)</span> <span class="o">-</span> <span class="p">(</span> <span class="p">(</span><span class="mi">30</span><span class="o">/</span><span class="mi">100</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">primaryCanvas</span><span class="o">.</span><span class="n">winfo_width</span><span class="p">()</span> <span class="p">)</span> <span class="p">)</span><span class="o">/</span><span class="mi">100</span> 
         <span class="k">return</span> <span class="n">sleepTime</span></div>
@@ -479,7 +466,7 @@
         <span class="n">tag</span>  <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="n">thread</span><span class="o">.</span><span class="n">ident</span> <span class="p">)</span>
         <span class="n">wait_container</span> <span class="o">=</span> <span class="n">container_data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         
-        <span class="n">wait_container</span><span class="o">.</span><span class="n">removeThreadInWait</span><span class="p">(</span> <span class="n">thread</span> <span class="p">)</span>
+        <span class="n">wait_container</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span> <span class="n">thread</span> <span class="p">)</span>
         
         <span class="n">imageHeight</span> <span class="o">=</span> <span class="p">(</span><span class="mi">25</span><span class="o">/</span><span class="mi">100</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">lockHeight</span>
         <span class="n">imageWidth</span> <span class="o">=</span> <span class="p">(</span><span class="mi">50</span><span class="o">/</span><span class="mi">100</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">containerWidth</span>
@@ -495,7 +482,7 @@
         <span class="n">container_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lockContainer</span><span class="p">[</span><span class="n">lock</span><span class="p">]</span>
         <span class="n">conditionContainer</span> <span class="o">=</span> <span class="n">container_data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
         <span class="n">conditionData</span> <span class="o">=</span> <span class="n">conditionContainer</span><span class="p">[</span><span class="n">condition</span><span class="p">]</span>
-        <span class="n">conditionData</span><span class="o">.</span><span class="n">removeThreadInCondition</span><span class="p">(</span><span class="n">thread</span><span class="p">)</span>
+        <span class="n">conditionData</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">thread</span><span class="p">)</span>
         <span class="n">imageHeight</span> <span class="o">=</span> <span class="p">(</span><span class="mi">25</span><span class="o">/</span><span class="mi">100</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">lockHeight</span>
         <span class="n">imageWidth</span> <span class="o">=</span> <span class="p">(</span><span class="mi">50</span><span class="o">/</span><span class="mi">100</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">containerWidth</span>
         <span class="n">lock_container</span> <span class="o">=</span> <span class="n">container_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -509,7 +496,7 @@
         <span class="n">container_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lockContainer</span><span class="p">[</span><span class="n">lock</span><span class="p">]</span>
         <span class="n">conditionContainers</span> <span class="o">=</span> <span class="n">container_data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
         <span class="n">conditionData</span> <span class="o">=</span> <span class="n">conditionContainers</span><span class="p">[</span><span class="n">condition</span><span class="p">]</span>
-        <span class="n">conditionData</span><span class="o">.</span><span class="n">addThreadInCondition</span><span class="p">(</span><span class="n">thread</span><span class="p">)</span>
+        <span class="n">conditionData</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">thread</span><span class="p">)</span>
         <span class="n">lock_container</span> <span class="o">=</span> <span class="n">container_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">lock_container</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span> <span class="s1">&#39;text&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">thread</span><span class="o">.</span><span class="n">ident</span><span class="p">)</span> <span class="p">)</span>
         <span class="n">lock_container</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span> <span class="s1">&#39;acquireImage&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">thread</span><span class="o">.</span><span class="n">ident</span><span class="p">)</span> <span class="p">)</span>
@@ -613,27 +600,17 @@
         <span class="k">for</span> <span class="n">thread</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">threads</span><span class="p">:</span>
             <span class="n">thread</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
 
-    <span class="c1">#no synchronization (look to StopAndPlay.run)</span>
-<div class="viewcode-block" id="Controller.checkIfStopped"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.checkIfStopped">[docs]</a>    <span class="k">def</span> <span class="nf">checkIfStopped</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checkStepsToo</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">checkStepsToo</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">isStopped</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">&lt;=</span> <span class="mi">0</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">isStopped</span></div></div>
+<div class="viewcode-block" id="Controller.run"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.Controller.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">stepLock</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isStopped</span><span class="p">:</span>
+                <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">isStopped</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">stepCondition</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">-=</span> <span class="mi">1</span></div></div>
 
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">lock e condition globali per sincronizzare threading e vista</span>
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="n">stepLock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">lock e condition globali per sincronizzare threading e vista</span>
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="n">stepCondition</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Condition</span><span class="p">(</span><span class="n">stepLock</span><span class="p">)</span>
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">lock e condition globali per sincronizzare threading e vista</span>
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="n">controller</span> <span class="o">=</span> <span class="n">Controller</span><span class="p">(</span><span class="n">stepLock</span><span class="p">,</span> <span class="n">stepCondition</span><span class="p">)</span>
 
-<div class="viewcode-block" id="startGraph"><a class="viewcode-back" href="../../threadmonitor.controller.html#threadmonitor.controller.startGraph">[docs]</a><span class="k">def</span> <span class="nf">startGraph</span><span class="p">():</span>
-    <span class="n">controller</span><span class="o">.</span><span class="n">start</span><span class="p">()</span></div>
+<span class="nd">@singleton</span>
+<span class="k">class</span> <span class="nc">SingletonController</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+    <span class="k">pass</span>
 </pre></div>
 
       </div>

@@ -1,25 +1,14 @@
 import threading
+from threadmonitor.utils import singleton
 from tkinter import ttk
 from tkinter import *
 from typing import Any, Optional, Tuple
-from PIL import ImageTk
 import threading
 import time
 from functools import partial
-from threadmonitor.utils import getResourceFromName
 from threadmonitor.view.tk import InactiveContainer, WaitContainer, ConditionContainer 
+from threadmonitor.view.tk import createAndEmplaceButton, getPhotoImage
 
-#TODO: vanno spostate in view
-def createAndEmplaceButton(master, text, command, **placeArgs) -> Button:
-    ret = Button(master, text = text, command = command)
-    ret.place(**placeArgs)
-    return ret
-
-#TODO: vanno spostate in view
-def getPhotoImage(resourceName: str, resizeParams: Tuple[int, int], master) -> ImageTk.PhotoImage:
-    image = ImageTk.Image.open( getResourceFromName(resourceName) )
-    image = image.resize( resizeParams )
-    return ImageTk.PhotoImage( master = master, image = image )
 
 class Controller:
     
@@ -30,12 +19,12 @@ class Controller:
     INDEX_LOCK_CONTAINER = 1
     isStopped = False
     
-    def __init__( self, stepLock: threading.Lock, stepCondition: threading.Condition ):
+    def __init__(self):
         
         self.window = Tk()
         self.window.title( 'graphthreading' )
-        self.stepLock = stepLock
-        self.stepCondition = stepCondition
+        self.stepLock = threading.Lock()
+        self.stepCondition = threading.Condition(self.stepLock)
 
         self.screen_width = self.window.winfo_screenwidth()
         self.screen_heigth = self.window.winfo_screenheight()
@@ -169,10 +158,6 @@ class Controller:
         with self.stepLock:
             self.step += 1
             self.stepCondition.notifyAll()
-    
-    #no synchronization (look to StopAndPlay.run)
-    def decreaseStep(self):
-        self.step -= 1
 
     def changeThreadName( self, label, textField, menu, button ):
         threads = {}
@@ -334,7 +319,7 @@ class Controller:
                     self.primaryCanvas.after( 10, self.__moveFromInactiveToWait, thread, wait_container, height, orient, tag, lock, startTime )
                 
                 else:
-                    wait_container.addThreadInWait( thread, lock )
+                    wait_container.add( thread, lock )
                     self.primaryCanvas.delete(tag)
                     self.primaryCanvas.delete( f"image{ str(thread.ident) }" )
             
@@ -346,7 +331,7 @@ class Controller:
                     self.primaryCanvas.after( 10, self.__moveFromInactiveToWait, thread, wait_container, height, orient, tag, lock, startTime )
             
                 else:
-                    wait_container.addThreadInWait( thread, lock )
+                    wait_container.add( thread, lock )
                     lock.canAcquire = True
                     self.primaryCanvas.delete( tag )
                     self.primaryCanvas.delete( f"image{ str(thread.ident) }" )
@@ -407,7 +392,7 @@ class Controller:
                 else:
                     self.primaryCanvas.delete(tag)
                     self.primaryCanvas.delete('inactiveimage'+str(thread.ident))
-                    self.inactiveData.addThreadInactive(thread,lock)
+                    self.inactiveData.add(thread,lock)
                     self.releasingLock.remove(lock)
                     container.itemconfigure('greyRedSem',state='normal')         
                     container.itemconfigure('greyGreenSem',state="hidden")
@@ -436,7 +421,7 @@ class Controller:
 
         timeStart = time.time()
         self.__moveFromInactiveToWait( thread, wait_data, height, orient, tag_param, lock, timeStart )
-        self.inactiveData.removeThreadInactive(thread)
+        self.inactiveData.remove(thread)
         
         sleepTime = ( height + ( self.primaryCanvas.winfo_width()/2 ) - ( (30/100)*self.primaryCanvas.winfo_width() ) )/100 
         return sleepTime
@@ -449,7 +434,7 @@ class Controller:
         tag  = str( thread.ident )
         wait_container = container_data[1]
         
-        wait_container.removeThreadInWait( thread )
+        wait_container.remove( thread )
         
         imageHeight = (25/100)*self.lockHeight
         imageWidth = (50/100)*self.containerWidth
@@ -465,7 +450,7 @@ class Controller:
         container_data = self.lockContainer[lock]
         conditionContainer = container_data[2]
         conditionData = conditionContainer[condition]
-        conditionData.removeThreadInCondition(thread)
+        conditionData.remove(thread)
         imageHeight = (25/100)*self.lockHeight
         imageWidth = (50/100)*self.containerWidth
         lock_container = container_data[0]
@@ -479,7 +464,7 @@ class Controller:
         container_data = self.lockContainer[lock]
         conditionContainers = container_data[2]
         conditionData = conditionContainers[condition]
-        conditionData.addThreadInCondition(thread)
+        conditionData.add(thread)
         lock_container = container_data[0]
         lock_container.delete( 'text' + str(thread.ident) )
         lock_container.delete( 'acquireImage' + str(thread.ident) )
@@ -583,24 +568,14 @@ class Controller:
         for thread in self.threads:
             thread.exit()
 
-    #no synchronization (look to StopAndPlay.run)
-    def checkIfStopped(self, checkStepsToo = False):
-        if checkStepsToo:
-            return self.isStopped and self.step <= 0
-        return self.isStopped
+    def run(self):
+        with self.stepLock:
+            if self.isStopped:
+                while self.isStopped and self.step <= 0:
+                    self.stepCondition.wait()
+                self.step -= 1
 
-def startGraph():
-    controllerInstance.start()
 
-"""
-lock e condition globali per sincronizzare threading e vista
-"""
-stepLock = threading.Lock()
-"""
-lock e condition globali per sincronizzare threading e vista
-"""
-stepCondition = threading.Condition(stepLock)
-"""
-lock e condition globali per sincronizzare threading e vista
-"""
-controllerInstance = Controller(stepLock, stepCondition)
+@singleton
+class SingletonController(Controller):
+    pass

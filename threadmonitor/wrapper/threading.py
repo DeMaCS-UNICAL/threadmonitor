@@ -1,6 +1,6 @@
 # coding=utf-8
 
-import threadmonitor.controller as control
+import threadmonitor.controller as controller
 import threading as std_threading
 import time
 import os
@@ -11,12 +11,10 @@ class _StopAndPlay:
     def __init__(self):
         self.lock = std_threading.Lock()
         self.condition = std_threading.Condition(self.lock)
-        self.stepLock = control.stepLock
-        self.stepCondition = control.stepCondition
+        self.controller = controller.SingletonController()
         #verificare se è possibile rimuovere questa variabile
         self.running = True
-        self.controller = control.controllerInstance
-    
+        
     #TODO: capire il funzionamento di stop
     def stop(self):
         with self.lock:
@@ -29,13 +27,7 @@ class _StopAndPlay:
             self.condition.notifyAll()
     
     def run(self):
-        #TODO: acquisizione di un lock "globale"
-        with self.stepLock:
-            if self.controller.checkIfStopped():
-                while self.controller.checkIfStopped(checkStepsToo = True):
-                    self.stepCondition.wait()
-                self.controller.decreaseStep()
-
+        self.controller.run()
 
 @singleton
 class _SingletonStopAndPlay(_StopAndPlay):
@@ -53,25 +45,19 @@ class Lock():
         self.id = Lock.__id
         Lock.__id += 1
         # view
-        self.controller = control.controllerInstance
+        self.controller = controller.SingletonController()
         self.controller.addLock(self)
         self.playController = _SingletonStopAndPlay()
         # wait
         self.waitLock = std_threading.Lock()
         self.waitCondition = std_threading.Condition(self.waitLock)
-        # A CHE CAZZO SERVE
-        self.isInWait = False
         # release
         self.releaseLock = std_threading.Lock()
         self.releaseCondition = std_threading.Condition(self.releaseLock)   
         self.isReleased = False     
-        # ???
-        self.lockCondition = std_threading.Lock()
-        self.condCondition = std_threading.Condition(self.lockCondition)
         #true lock
         self.lock = std_threading.Lock()
         # non so a cosa afferiscono
-        self.canAcquire = False
         self.condionThread = {}
     
     def acquire( self, blocking = True, timeout = -1 ) -> bool:
@@ -105,6 +91,7 @@ class Lock():
             while not self.isReleased:
                 self.releaseCondition.wait()
         # vero release?
+        #TODO: accesso non protetto
         self.isReleased = False
         self.lock.release()
         time.sleep(2)
@@ -134,7 +121,7 @@ class Thread(std_threading.Thread):
         default list of Thread.__init__ function arguments: necessario per garantire la retrocompatibilità
         """
         super().__init__(group = group, target = target, name = name, args = args, kwargs = kwargs, daemon = daemon)
-        self.controller = control.controllerInstance
+        self.controller = controller.SingletonController()
         self.controller.addThread(self)
     
     #TODO: non-compliant colla libreria standard, da decidere come sostituirlo (exceptionhook?)
@@ -151,7 +138,7 @@ class Condition(std_threading.Condition):
     def __init__(self,lock = None):
         super().__init__(lock)
         self.glock = lock
-        self.controller = control.controllerInstance
+        self.controller = controller.SingletonController()
         self.name = ""
         self.controller.addCondition(self,self.glock)
         
@@ -176,8 +163,7 @@ class Condition(std_threading.Condition):
         self.controller.setConditionName(self,self.glock,name)
 
 
-#da valutare se qua si può utilizzare anche il Thread di libreria
-#reflection?
+#TODO da valutare se qua si può utilizzare anche il Thread di libreria: reflection?
 def current_thread() -> Thread:
     return std_threading.current_thread()
 

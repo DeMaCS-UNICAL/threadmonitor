@@ -54,3 +54,10 @@ Changelog:
 - updated readme.md
 - renamed _InactiveContainer to InactiveContainer
 - renamed _WaitContainer to InactiveContainer
+
+2021/08/24
+- made AbstractContainer base class for WaitContainer, InactiveContainer, ConditionContainer
+- implemented SingletonController to replace the global controller, stepLock and stepCondition variables
+- implemented controller.run() and made _StopAndPlay.run() a wrapper of the former
+- moved startGraph() the the root module __init__.py file
+- KNOWN ISSUES: mandatory synchronization of the addLock/addThread/addCondition methods to allow object to be added at runtime, rather than before calling startGraph()

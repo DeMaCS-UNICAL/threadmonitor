@@ -9,3 +9,6 @@ appunti.txt
 .idea/
 *next_commit*
 pat
+docs/_build/
+docs/_build/*
+
