@@ -2,13 +2,39 @@ import threading
 from threadmonitor.utils import singleton
 from tkinter import ttk
 from tkinter import *
-from typing import Any, Optional, Tuple
 import threading
 import time
 from functools import partial
 from threadmonitor.view.tk import InactiveContainer, WaitContainer, ConditionContainer 
 from threadmonitor.view.tk import createAndEmplaceButton, getPhotoImage
+import threadmonitor.model as model
 
+class StopAndPlay:
+
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.condition = threading.Condition(self.lock)
+        self.controller = SingletonController()
+        #verificare se è possibile rimuovere questa variabile
+        self.running = True
+        
+    #TODO: capire il funzionamento di stop
+    def stop(self):
+        with self.lock:
+            self.running = False
+
+    #TODO: capire il funzionamento di play
+    def play(self):
+        with self.lock:
+            self.running = True
+            self.condition.notifyAll()
+    
+    def run(self):
+        self.controller.run()
+
+@singleton
+class SingletonStopAndPlay(StopAndPlay):
+    pass
 
 class Controller:
     
@@ -34,25 +60,8 @@ class Controller:
         self.step = 0
         self.startLock = threading.Lock()
         self.startCondition = threading.Condition( self.startLock )
-        ### INIZIALIZZAZIONE LOGICA ###
 
-        ### hashMap contenente come chiave il nome del lock, e come valore il relativo canvas ###
-        self.lockContainer = {}
-        
-        ### In quale container è conenuto al momento il thread ###
-        self.threadContainer = {}
-
-        ### wait container associato a uno specifico lock ###
-        self.waitContainer = {}
-
-        ### Lista dei threads ###
-        self.threads = []
-
-        ### Lista dei thread inattivi ###
-        self.inactiveThread = []
-
-        ### Lista dei thread in wait su un determinato lock ###
-        self.waitThread = {}
+        self.modelData = model.SingletonLogic()
 
         ### PUNTI DI PARTENZA DEI CONTAINERS ###
         self.currentOrientPosition = 0
@@ -140,7 +149,8 @@ class Controller:
             self.nextStepButton.configure( state = 'disabled' )
             self.isStopped = False
             self.primaryCanvas.configure( background = '#A0A0A0' )
-            for lock in self.lockContainer.keys():
+            for lock in self.modelData.getLockContainerKeys():
+                #TODO: dipendenza fra wrapper e controller
                 lock.playController.play()
             self.step = 0          
             self.stepCondition.notifyAll()
@@ -151,7 +161,7 @@ class Controller:
         self.nextStepButton.configure( state = 'normal' )
         self.isStopped = True
         self.primaryCanvas.configure( background = '#696969' )
-        for lock in self.lockContainer.keys():
+        for lock in self.modelData.getLockContainerKeys():
             lock.playController.stop()
     
     def nextStep(self):
@@ -161,12 +171,12 @@ class Controller:
 
     def changeThreadName( self, label, textField, menu, button ):
         threads = {}
-        for thread in self.threads:
+        for thread in self.modelData.getThreads():
             threads[ thread.getName() ] = thread
         threads[ label['text'] ].name = textField.get( '1.0', 'end-1c' )
         label.configure( text = 'Name modified!' )
-        menu.delete(0, len(self.threads)-1 )
-        for thread in self.threads:
+        menu.delete(0, len(self.modelData.getThreads())-1 )
+        for thread in self.modelData.getThreads():
             calling_data = partial( self.setLabel, label, thread.getName(), textField, button )
             menu.add_command( label = thread.getName(), command = calling_data )
         button.configure( state = 'disabled' )
@@ -185,7 +195,7 @@ class Controller:
         textField.place( relx = 0.5, rely = 0.40, relheight = 0.2, relwidth = 0.5, anchor = 'n' )      
         button = createAndEmplaceButton( popup, 'Change name', None, relx = 0.5, rely = 1, anchor = 's')
         button.configure( command = partial( self.changeThreadName, label, textField, threadBar, button ) )
-        for thread in self.threads:
+        for thread in self.modelData.getThreads():
             calling_data = partial( self.setLabel, label, thread.getName(), textField, button )
             threadBar.add_command( label = thread.getName(), command = calling_data )
         menu.add_cascade( label = 'Select thread', menu = threadBar )       
@@ -207,10 +217,10 @@ class Controller:
         popup.mainloop()
 
     def addThread( self, thread ):
-        self.threads.append(thread)
+        self.modelData.getThreads().append(thread)
 
     def setLockName( self, lock, name ):
-        lock_data = self.lockContainer[lock]
+        lock_data = self.modelData.getLockData(lock)
         lock_label = lock_data[5]
         lock_label.configure( text = name )
 
@@ -232,7 +242,7 @@ class Controller:
         container.create_window( self.containerWidth/2, (0/100)*self.containerHeight, window = waitContainer, anchor = 'n' )#.place(relx=0.5,anchor='center',rely=0.25, relheight=0.50,relwidth=1)
         waitLabel = Label( waitContainer,text = 'Wait threads' )
         waitLabel.place( relx = 0, rely = 0, anchor = 'nw' )
-        self.waitContainer[ lock ]=waitContainer
+        self.modelData.addWaitData(lock, waitContainer)
 
         ### creo i semafori che mostrano lo stato attuale del lock ###
         lock_container.create_image( self.containerWidth*(90/100), self.containerHeight*(50/100), image = self.redSem, tag = "redSem", state = "hidden" )
@@ -252,14 +262,14 @@ class Controller:
         ### associo al lock i relativi container ###
         conditionContainers = {}
         currentHeightCanvas = self.containerHeight
-        self.lockContainer[ lock ]=[lock_container, wait_data, conditionContainers, self.currentHeightPosition, self.currentOrientPosition%2, lockLabel, currentHeightCanvas, container ]
+        self.modelData.addLockData(lock, [lock_container, wait_data, conditionContainers, self.currentHeightPosition, self.currentOrientPosition%2, lockLabel, currentHeightCanvas, container])
         
         ### aggiorno le variabili per il posizionamento ###
         self.currentOrientPosition += 1
         
     def addCondition( self, condition, lock ):
         ### prendo il container principale del lock a cui è associata la condition ###
-        container_data = self.lockContainer[ lock ]
+        container_data = self.modelData.getLockData(lock)
         lock_container = container_data[7]
 
         ### prendo i dati utili a creare la window per la condition ###
@@ -298,7 +308,7 @@ class Controller:
         self.conditions.append( conditionContainer )
 
     def setConditionName( self, condition, lock, name ):
-        lock_data = self.lockContainer[ lock ]
+        lock_data = self.modelData.getLockData(lock)
         conditionContainer = lock_data[2]
         conditionContainer[ condition ].setConditionLabel( name )
 
@@ -406,7 +416,7 @@ class Controller:
             self.startLock.release()
             time.sleep(0.05)
         
-        container_data = self.lockContainer[lock]
+        container_data = self.modelData.getLockData(lock)
         
         tag_param = "wait{0}{1}".format( str(thread.ident), str(lock.getId()) )
         val_x = int( self.primaryCanvas.winfo_width()/2 )
@@ -428,7 +438,7 @@ class Controller:
     
     def setAcquireThread( self, thread, lock ):
         
-        container_data = self.lockContainer[lock]
+        container_data = self.modelData.getLockData(lock)
         
         lock_container = container_data[0]
         tag  = str( thread.ident )
@@ -447,7 +457,7 @@ class Controller:
     
     def setAcquireThreadFromCondition( self, thread, lock, condition ):
         tag = str( thread.ident )
-        container_data = self.lockContainer[lock]
+        container_data = self.modelData.getLockData(lock)
         conditionContainer = container_data[2]
         conditionData = conditionContainer[condition]
         conditionData.remove(thread)
@@ -461,7 +471,7 @@ class Controller:
         lock_container.itemconfigure( 'redSem', state = "normal" )
 
     def setThreadInCondition( self, thread, lock, condition ):
-        container_data = self.lockContainer[lock]
+        container_data = self.modelData.getLockData(lock)
         conditionContainers = container_data[2]
         conditionData = conditionContainers[condition]
         conditionData.add(thread)
@@ -473,7 +483,7 @@ class Controller:
         time.sleep(2)
 
     def setReleaseThread( self, thread, lock ):
-        container_data = self.lockContainer[lock]
+        container_data = self.modelData.getLockData(lock)
         lock_container = container_data[0]
         height = container_data[3]+( (50/100)*self.containerHeight )
         orient = container_data[4]
@@ -499,12 +509,12 @@ class Controller:
         return sleepTime
         
     def drawFutureLockThread( self, thread, lock ):
-        container_data = self.lockContainer[lock]
+        container_data = self.modelData.getLockData(lock)
         wait_data = container_data[1]
         wait_data.drawFutureAcquireThread(thread)
 
     def notifyLock(self,lock,condition,isAll):
-        container_data = self.lockContainer[lock]
+        container_data = self.modelData.getLockData(lock)
         conditionContainer = container_data[2]
         conditionData = conditionContainer[condition]
         startTime = time.time()
@@ -530,8 +540,9 @@ class Controller:
     def update(self):
         self.primaryCanvas.configure(scrollregion=self.primaryCanvas.bbox("all"))
         self.inactiveCanvas.configure(scrollregion=self.inactiveCanvas.bbox("all")) 
-        for key in self.waitContainer.keys():
-            self.waitContainer[key].configure(scrollregion=self.waitContainer[key].bbox("all"))
+        for key in self.modelData.getWaitContainerKeys():
+            value = self.modelData.getWaitData(key)
+            value.configure( scrollregion = value.bbox("all") )
         for container in self.conditions:
             container.configure(scrollregion=container.bbox("all"))
         self.window.after(50,self.update)
@@ -539,8 +550,8 @@ class Controller:
     def start(self):
         try:
             self.startLock.acquire()
-            for key in self.lockContainer.keys():
-                containerData=self.lockContainer[key]
+            for key in self.modelData.getLockContainerKeys():
+                containerData=self.modelData.getLockData(key)
                 container = containerData[7]
                 currentOrient=containerData[4]
 
@@ -565,7 +576,7 @@ class Controller:
 
     def __onclose(self):
         self.window.destroy()
-        for thread in self.threads:
+        for thread in self.modelData.getThreads():
             thread.exit()
 
     def run(self):

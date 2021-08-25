@@ -7,6 +7,7 @@ from PIL import ImageTk
 import threading
 import time
 from threadmonitor.utils import getResourceFromName, overrides
+import threadmonitor.model as model
 
 
 def createAndEmplaceButton(master, text, command, **placeArgs) -> Button:
@@ -27,57 +28,19 @@ def getPhotoImage(resourceName: str, resizeParams: Tuple[int, int], master) -> I
     return ImageTk.PhotoImage( master = master, image = image )
 
 
-class AbstractContainer:
+class AbstractTkContainer(model.AbstractContainer):
+    
     def __init__(self, container: Canvas, image: PhotoImage, baseWidth, baseHeight) -> None:
+        super().__init__()
         self.container = container
         self.image = image
 
-        self.lock = threading.Lock()
-        self.threads = []
         self.currentWidth = baseWidth
         self.currentHeight = baseHeight
+
+
+class ConditionContainer(AbstractTkContainer):
     
-    def add(self, thread, lock = None) -> None:
-        with self.lock:
-            self.threads.append(thread)
-            self.drawSingleThread(thread, lock)
-            self.postAdd(thread, lock)
-
-    def remove(self, threadObject) -> None:
-        with self.lock:
-            if self.removeCondition(threadObject):
-                for thread in self.threads:
-                    self.deleteSingle(thread)
-                self.threads.remove(threadObject)
-                self.redrawThreads()
-
-    #TODO: definire se sia necessario il lock sul redraw
-    def redrawThreads(self) -> None:
-        for thread in self.threads:
-            self.redrawSingle(thread)
-
-    #TODO: definire se sia necessario il lock sul redraw
-    def drawSingleThread(self, thread, lock = None) -> None:
-        self.redrawSingle(thread)
-
-    def removeCondition(self, obj) -> bool:
-        return True
-
-    @abstractmethod
-    def redrawSingle(self, thread) -> None:        
-        pass
-
-    @abstractmethod
-    def deleteSingle(self, thread) -> None:
-        pass
-
-    def postAdd(self, thread, lock) -> None:
-        return
-
-    pass
-
-
-class ConditionContainer(AbstractContainer):
     def __init__( self, conditionContainer: Canvas, image: PhotoImage, containerHeight, imageComputerHeight, imageComputerWidth, semCanvas, conditionLabel, semGreenCanvas ):
         super().__init__(conditionContainer, image, 20, 0)
         self.containerHeight = containerHeight
@@ -100,60 +63,62 @@ class ConditionContainer(AbstractContainer):
         else:
             updateCanvas.itemconfigure( grey, state = 'normal' )
     
-    @overrides(AbstractContainer)
-    def redrawThreads(self) -> None:
+    @overrides(AbstractTkContainer)
+    def redrawAll(self) -> None:
         self.currentWidth = 20
-        return super().redrawThreads()
+        return super().redrawAll()
 
-    @overrides(AbstractContainer)
+    @overrides(AbstractTkContainer)
     def removeCondition(self, obj) -> bool:
         return obj in self.threads
 
-    @overrides(AbstractContainer)
+    @overrides(AbstractTkContainer)
     def redrawSingle(self, thread) -> None:
         tag = str(thread.ident)
         self.container.create_image( self.currentWidth, self.currentHeight, image = self.image, tag = f'image{tag}', anchor = 'n' )
         self.container.create_text( self.currentWidth, self.currentHeight + self.imageComputerHeight, text = thread.getName(), tag = f'text{tag}', anchor = 'n' )
         self.currentWidth += self.imageComputerWidth*2
 
-    @overrides(AbstractContainer)
+    @overrides(AbstractTkContainer)
     def deleteSingle(self, thread) -> None:
         tag = str(thread.ident)
         self.container.delete(f'image{ tag }')
         self.container.delete(f'text{ tag }')
 
 
-class InactiveContainer(AbstractContainer):
+class InactiveContainer(AbstractTkContainer):
+    
     def __init__(self, inactiveContainer: Canvas, image: PhotoImage):
         super().__init__(inactiveContainer, image, 0, 30)
 
     #TODO: dipendenza dal wrapper, da risolvere
-    def drawSingleThread(self, thread, lock):
+    @overrides(AbstractTkContainer)
+    def drawSingle(self, thread, lock):
         #TODO: verificare perchè è stato aggiunto questo lock e se è possibile toglierlo
         lock.releaseLock.acquire()
         
-        super().drawSingleThread(thread)
+        super().drawSingle(thread)
         
         lock.releaseCondition.notify_all()
         lock.isReleased=True
         lock.releaseLock.release()
 
-    @overrides(AbstractContainer)
-    def redrawThreads(self) -> None:
+    @overrides(AbstractTkContainer)
+    def redrawAll(self) -> None:
         self.currentWidth = 0
-        return super().redrawThreads()
+        return super().redrawAll()
 
-    @overrides(AbstractContainer)
+    @overrides(AbstractTkContainer)
     def removeCondition(self, obj) -> bool:
         return obj in self.threads
 
-    @overrides(AbstractContainer)
+    @overrides(AbstractTkContainer)
     def deleteSingle(self, thread) -> None:
         tag = str(thread.ident)
         self.container.delete(f'image{tag}')
         self.container.delete(f'text{tag}')
 
-    @overrides(AbstractContainer)
+    @overrides(AbstractTkContainer)
     def redrawSingle(self, thread) -> None:
         tag=str(thread.ident)
         self.container.create_image( self.currentWidth, self.currentHeight, image = self.image, tag = f'image{tag}', anchor = 'n' )
@@ -161,7 +126,8 @@ class InactiveContainer(AbstractContainer):
         self.currentWidth += 100
 
 
-class WaitContainer(AbstractContainer):
+class WaitContainer(AbstractTkContainer):
+    
     def __init__(self, wait_container: Canvas, image, imageHeight ):
         super().__init__(wait_container, image, 0, 0)
         self.imageHeight = imageHeight
@@ -169,12 +135,12 @@ class WaitContainer(AbstractContainer):
     def drawFutureAcquireThread( self, thread ) -> None:
         self.container.itemconfigure( f"text{ str(thread.ident) }", fill='#cd5b45' )
 
-    @overrides(AbstractContainer)
-    def redrawThreads(self) -> None:
+    @overrides(AbstractTkContainer)
+    def redrawAll(self) -> None:
         self.currentHeight = 0
-        return super().redrawThreads()
+        return super().redrawAll()
 
-    @overrides(AbstractContainer)
+    @overrides(AbstractTkContainer)
     def redrawSingle(self, thread) -> None:
         tag=str(thread.ident)
         self.currentWidth = int(self.container.winfo_width()/2)
@@ -183,12 +149,12 @@ class WaitContainer(AbstractContainer):
         self.container.create_text( self.currentWidth, self.currentHeight, text = thread.getName(), tag = f'text{tag}', anchor = "n" )
         self.currentHeight += 0.5*self.imageHeight
 
-    @overrides(AbstractContainer)
+    @overrides(AbstractTkContainer)
     def deleteSingle(self, thread) -> None:
         tag = str(thread.ident)
         self.container.delete( f"text{tag}" )
         self.container.delete( f"image{tag}" )
 
-    @overrides(AbstractContainer)
+    @overrides(AbstractTkContainer)
     def postAdd(self, thread, lock) -> None:
         lock.canAcquire = True

@@ -4,34 +4,6 @@ import threadmonitor.controller as controller
 import threading as std_threading
 import time
 import os
-from threadmonitor.utils import singleton
-
-class _StopAndPlay:
-
-    def __init__(self):
-        self.lock = std_threading.Lock()
-        self.condition = std_threading.Condition(self.lock)
-        self.controller = controller.SingletonController()
-        #verificare se è possibile rimuovere questa variabile
-        self.running = True
-        
-    #TODO: capire il funzionamento di stop
-    def stop(self):
-        with self.lock:
-            self.running = False
-
-    #TODO: capire il funzionamento di play
-    def play(self):
-        with self.lock:
-            self.running = True
-            self.condition.notifyAll()
-    
-    def run(self):
-        self.controller.run()
-
-@singleton
-class _SingletonStopAndPlay(_StopAndPlay):
-    pass
 
 
 class Lock():
@@ -47,7 +19,7 @@ class Lock():
         # view
         self.controller = controller.SingletonController()
         self.controller.addLock(self)
-        self.playController = _SingletonStopAndPlay()
+        self.playController = controller.SingletonStopAndPlay()
         # wait
         self.waitLock = std_threading.Lock()
         self.waitCondition = std_threading.Condition(self.waitLock)

@@ -61,3 +61,12 @@ Changelog:
 - implemented controller.run() and made _StopAndPlay.run() a wrapper of the former
 - moved startGraph() the the root module __init__.py file
 - KNOWN ISSUES: mandatory synchronization of the addLock/addThread/addCondition methods to allow object to be added at runtime, rather than before calling startGraph()
+
+2021/08/25
+- implemented _InactiveContainer, Logic classes in model package
+- moved AbstractContainer from tk.py to model package and implemented AbstractTkContainer
+- updated Controller to move most of the logic in the model package
+- KNOWN ISSUES
+    - the Controller package still calls directly the view package
+    - the startGraph method is still mandatory
+    - the interaction between view and model still needs to be fleshed out
