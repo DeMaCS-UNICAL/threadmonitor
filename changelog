@@ -70,3 +70,16 @@ Changelog:
     - the Controller package still calls directly the view package
     - the startGraph method is still mandatory
     - the interaction between view and model still needs to be fleshed out
+- repaired broken StopAndPlay implementation and integrated it with the existing Controller
+- cleaned up classes with direct references to StopAndPlay: now only the Controller calls it, as a utility class
+- updated StopAndPlay to require a Controller param in initialization to enforce the dependency between the two classes
+- removed SingletonStopAndPlay
+
+2021/08/26
+- created events.py
+- (W.I.P.) created a basic event handling system (classes Event, EventHandler, and the respective subclasses)
+
+2021/08/27
+- (W.I.P.) implemented TkView in tk.py
+- implemented setup system for views in view.__init__.py
+- KNOWN ISSUES: not working

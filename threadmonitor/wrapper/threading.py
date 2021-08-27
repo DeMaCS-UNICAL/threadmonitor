@@ -19,7 +19,6 @@ class Lock():
         # view
         self.controller = controller.SingletonController()
         self.controller.addLock(self)
-        self.playController = controller.SingletonStopAndPlay()
         # wait
         self.waitLock = std_threading.Lock()
         self.waitCondition = std_threading.Condition(self.waitLock)
@@ -36,13 +35,13 @@ class Lock():
         # sembra fare principalmente operazioni grafiche sotto waitLock
         with self.waitLock:
             self.isReleased = False
-            self.playController.run()
+            self.controller.run()
             # puramente operazioni grafiche?
             sleepTime = self.controller.setWaitThread( current_thread(), self )
             time.sleep( sleepTime )
         # vera chiamata a threading.lock.acquire
         ret = self.lock.acquire( blocking, timeout )
-        self.playController.run()
+        self.controller.run()
         self.controller.drawFutureLockThread( current_thread(), self )
         time.sleep(2)
         self.controller.setAcquireThread( current_thread(), self )
@@ -58,7 +57,7 @@ class Lock():
                 self.controller.setAcquireThreadFromCondition( std_threading.current_thread(), self, self.condionThread[std_threading.current_thread()] )
                 del self.condionThread[ std_threading.current_thread() ]
                 time.sleep(3)
-            self.playController.run()
+            self.controller.run()
             self.controller.setReleaseThread( std_threading.current_thread(), self )
             while not self.isReleased:
                 self.releaseCondition.wait()
@@ -70,7 +69,7 @@ class Lock():
 
     #TODO: non-compliant colla libreria standard, da decidere se sostituirlo
     def addConditionThread(self,thread,condition) -> None:
-        self.playController.run()
+        self.controller.run()
         self.controller.setThreadInCondition( thread, self, condition)
         self.condionThread[thread] = condition
 

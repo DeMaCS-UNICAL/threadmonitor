@@ -1,4 +1,5 @@
 import threading
+from threadmonitor.model.events import ConditionEvent, GeneralEvent, LockEvent, ThreadEvent
 from threadmonitor.utils import singleton
 from tkinter import ttk
 from tkinter import *
@@ -7,34 +8,8 @@ import time
 from functools import partial
 from threadmonitor.view.tk import InactiveContainer, WaitContainer, ConditionContainer 
 from threadmonitor.view.tk import createAndEmplaceButton, getPhotoImage
-import threadmonitor.model as model
-
-class StopAndPlay:
-
-    def __init__(self):
-        self.lock = threading.Lock()
-        self.condition = threading.Condition(self.lock)
-        self.controller = SingletonController()
-        #verificare se è possibile rimuovere questa variabile
-        self.running = True
-        
-    #TODO: capire il funzionamento di stop
-    def stop(self):
-        with self.lock:
-            self.running = False
-
-    #TODO: capire il funzionamento di play
-    def play(self):
-        with self.lock:
-            self.running = True
-            self.condition.notifyAll()
-    
-    def run(self):
-        self.controller.run()
-
-@singleton
-class SingletonStopAndPlay(StopAndPlay):
-    pass
+import threadmonitor.model.logic as model
+import threadmonitor.view as view
 
 class Controller:
     
@@ -47,21 +22,42 @@ class Controller:
     
     def __init__(self):
         
-        self.window = Tk()
-        self.window.title( 'graphthreading' )
         self.stepLock = threading.Lock()
         self.stepCondition = threading.Condition(self.stepLock)
-
-        self.screen_width = self.window.winfo_screenwidth()
-        self.screen_heigth = self.window.winfo_screenheight()
-        self.pad = 3
-        self.window.geometry( '{0}x{1}'.format( self.screen_width-self.pad, self.screen_heigth-self.pad ) )
         self.started = False
-        self.step = 0
         self.startLock = threading.Lock()
         self.startCondition = threading.Condition( self.startLock )
 
         self.modelData = model.SingletonLogic()
+
+        self.stopAndPlay = StopAndPlay(self)
+
+        initEvent = GeneralEvent('init')
+
+        self.playEvent = GeneralEvent('play')
+        self.stopEvent = GeneralEvent('stop')
+        self.startEvent = GeneralEvent('start')
+
+        self.addThreadEvent = ThreadEvent('add')
+        
+        self.addLockEvent = LockEvent('add')
+        
+        self.addConditionEvent = ConditionEvent('add')
+
+        self.waitThreadEvent = ThreadEvent('wait')
+
+        view.view_init()
+
+        initEvent(play = self.play, stop = self.stop, next = self.next_step, popup = self.createPopupThread, update = self.update, close = self.__onclose)
+
+        self.window = Tk()
+        self.window.title( 'graphthreading' )
+        
+        self.screen_width = self.window.winfo_screenwidth()
+        self.screen_heigth = self.window.winfo_screenheight()
+        self.pad = 3
+        self.window.geometry( '{0}x{1}'.format( self.screen_width-self.pad, self.screen_heigth-self.pad ) )
+        
 
         ### PUNTI DI PARTENZA DEI CONTAINERS ###
         self.currentOrientPosition = 0
@@ -77,7 +73,6 @@ class Controller:
         self.lockHeight = (70/100)*self.containerHeight
         self.inactiveWidth = 500
 
-        #TODO: ?
         self.releasingLock = []
        
         ### Lista di tutti i container creati ###
@@ -86,7 +81,6 @@ class Controller:
         ### Contiene come chiave gli scroll, e come valore gli oggetti a cui sono attaccati ###
         self.scrolls = []
 
-        #TODO: ?
         self.conditions = []
        
         ### Inizializzazione inactive Frame ###
@@ -125,9 +119,12 @@ class Controller:
 
         self.primaryCanvas.create_window( self.screen_width/2, 0, window = self.inactiveCanvas, anchor = 'n' )
 
+#       self.model.addCallback('play', self.play)
+#       self.model.addCallback('pause', self.stop)
+#       self.model.addCallback('next step', self.next_step)
         self.playButton = createAndEmplaceButton( self.primaryCanvas, 'play', self.play, relx = 0.93, rely = 0.02, relheight = 0.025 )
         self.stopButton = createAndEmplaceButton( self.primaryCanvas, 'pause', self.stop, relx = 0.93, rely = 0.045, relheight = 0.025 )
-        self.nextStepButton = createAndEmplaceButton( self.primaryCanvas, 'next step', self.nextStep, relx = 0.93, rely = 0.070, relheight = 0.025 )
+        self.nextStepButton = createAndEmplaceButton( self.primaryCanvas, 'next step', self.next_step, relx = 0.93, rely = 0.070, relheight = 0.025 )
         self.nextStepButton.configure( state = 'disabled' )
 
         ### Inizializzazioni immagini ###
@@ -147,27 +144,21 @@ class Controller:
         with self.stepLock:
             self.stopButton.configure( state = 'normal' )
             self.nextStepButton.configure( state = 'disabled' )
-            self.isStopped = False
             self.primaryCanvas.configure( background = '#A0A0A0' )
-            for lock in self.modelData.getLockContainerKeys():
-                #TODO: dipendenza fra wrapper e controller
-                lock.playController.play()
-            self.step = 0          
-            self.stepCondition.notifyAll()
+            self.playEvent()
+            self.stopAndPlay.play()
     
-    #TODO: modifica di variabili senza sincronizzazione, è quello che vogliamo?
     def stop(self):
-        self.playButton.configure( state = 'normal' )
-        self.nextStepButton.configure( state = 'normal' )
-        self.isStopped = True
-        self.primaryCanvas.configure( background = '#696969' )
-        for lock in self.modelData.getLockContainerKeys():
-            lock.playController.stop()
-    
-    def nextStep(self):
         with self.stepLock:
-            self.step += 1
-            self.stepCondition.notifyAll()
+            self.playButton.configure( state = 'normal' )
+            self.nextStepButton.configure( state = 'normal' )
+            self.primaryCanvas.configure( background = '#696969' )
+            self.stopEvent()
+            self.stopAndPlay.stop()
+
+    def next_step(self):
+        with self.stepLock:
+            self.stopAndPlay.next_step()
 
     def changeThreadName( self, label, textField, menu, button ):
         threads = {}
@@ -262,10 +253,13 @@ class Controller:
         ### associo al lock i relativi container ###
         conditionContainers = {}
         currentHeightCanvas = self.containerHeight
-        self.modelData.addLockData(lock, [lock_container, wait_data, conditionContainers, self.currentHeightPosition, self.currentOrientPosition%2, lockLabel, currentHeightCanvas, container])
         
         ### aggiorno le variabili per il posizionamento ###
         self.currentOrientPosition += 1
+
+        self.addLockEvent(lock)
+        self.modelData.addLockData(lock, [lock_container, wait_data, conditionContainers, self.currentHeightPosition, self.currentOrientPosition%2, lockLabel, currentHeightCanvas, container])
+        
         
     def addCondition( self, condition, lock ):
         ### prendo il container principale del lock a cui è associata la condition ###
@@ -306,6 +300,8 @@ class Controller:
         ### inserisco la condition nel container ###
         conditionContainers[ condition ] = conditionData
         self.conditions.append( conditionContainer )
+
+        self.addConditionEvent(condition, lock)
 
     def setConditionName( self, condition, lock, name ):
         lock_data = self.modelData.getLockData(lock)
@@ -435,6 +431,8 @@ class Controller:
         
         sleepTime = ( height + ( self.primaryCanvas.winfo_width()/2 ) - ( (30/100)*self.primaryCanvas.winfo_width() ) )/100 
         return sleepTime
+
+        self.waitThreadEvent( thread, lock )
     
     def setAcquireThread( self, thread, lock ):
         
@@ -548,8 +546,7 @@ class Controller:
         self.window.after(50,self.update)
     
     def start(self):
-        try:
-            self.startLock.acquire()
+        with self.startLock:
             for key in self.modelData.getLockContainerKeys():
                 containerData=self.modelData.getLockData(key)
                 container = containerData[7]
@@ -564,15 +561,12 @@ class Controller:
                     self.currentHeightRightPosition+=containerData[6]+30
                 else:
                     self.currentHeightLeftPosition+=containerData[6]+30
-            self.window.after(50,self.update)
+            self.window.after(50, self.updateCommand)
             self.started = True
             
-        except Exception as e:
-            print(e)
-        finally:
             self.startCondition.notifyAll()
-            self.startLock.release()
-            self.window.mainloop()
+        self.window.mainloop()
+#       self.startEvent()
 
     def __onclose(self):
         self.window.destroy()
@@ -581,12 +575,34 @@ class Controller:
 
     def run(self):
         with self.stepLock:
-            if self.isStopped:
-                while self.isStopped and self.step <= 0:
-                    self.stepCondition.wait()
-                self.step -= 1
+            self.stopAndPlay.run()
 
 
 @singleton
 class SingletonController(Controller):
     pass
+
+class StopAndPlay:
+
+    def __init__(self, controller: Controller):
+        self.condition = controller.stepCondition
+        self.isStopped = False
+        self.step = 0
+
+    def stop(self):
+        self.isStopped = True
+
+    def play(self):
+        self.isStopped = False
+        self.step = 0
+        self.condition.notifyAll()
+
+    def run(self):
+        if self.isStopped:
+            while self.isStopped and self.step <= 0:
+                self.condition.wait()
+            self.step -= 1
+
+    def next_step(self):
+        self.step += 1
+        self.condition.notifyAll()

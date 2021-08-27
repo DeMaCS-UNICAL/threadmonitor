@@ -9,7 +9,7 @@ Library originally made by Guido Scarlato, forked by Davide Caligiuri.
 # to obtain a perfectly valid multithreading code, replace with:
 # from threading import Lock, Thread, Condition
 from threadmonitor.wrapper.threading import Lock, Thread, Condition
-from threadmonitor.controller import startGraph
+from threadmonitor import startGraph
 
 class Structure:
     def __init__(self):
