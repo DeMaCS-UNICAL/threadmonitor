@@ -1,14 +1,14 @@
 # coding=utf-8
 
-from threadmonitor.model.events import ConditionEventHandler, GeneralEventHandler, LockEventHandler, ThreadEventHandler
+from functools import partial
+from threadmonitor.model.events import ConditionBroker, GeneralBroker, LockBroker, ThreadBroker
 from tkinter import ttk
 from tkinter import * 
-from typing import Any, Optional, Tuple
+from typing import Tuple
 from PIL import ImageTk
 import time
-from threadmonitor.utils import getResourceFromName, overrides
+from threadmonitor.utils import getResourceFromName, overrides, singleton
 import threadmonitor.model.logic as model
-import threading
 
 
 def createAndEmplaceButton(master, text, command, **placeArgs) -> Button:
@@ -60,7 +60,6 @@ class ConditionContainer(AbstractTkContainer):
         if currentTime <= startTime + 7:
             state = "hidden" if red else "normal"
             updateCanvas.itemconfigure( grey, state = state )
-            updateCanvas.after( 400, self.blinkCondition, startTime, not red, grey )
         else:
             updateCanvas.itemconfigure( grey, state = 'normal' )
     
@@ -162,12 +161,17 @@ class WaitContainer(AbstractTkContainer):
 
 
 class TkView:
+
+    FINISH = False
+    DESTRA = 1
+    SINISTRA = 0
+    INDEX_WAIT_CONTAINER = 1
+    INDEX_LOCK_CONTAINER = 1
+    isStopped = False
+
     def __init__(self):
 
         self.modelData = model.SingletonLogic()
-        self.started = False
-        self.startLock = threading.Lock()
-        self.startCondition = threading.Condition( self.startLock )
 
         self.window = Tk()
         self.window.title( 'graphthreading' )
@@ -264,8 +268,13 @@ class TkView:
         self.nextStepButton.configure( state = 'normal' )
         self.primaryCanvas.configure( background = '#696969' )
 
-    def newThread(self):
-        pass
+    def newThread(self) -> None:
+        return
+
+    def setConditionName( self, condition, lock, name ):
+        lock_data = self.modelData.getLockData(lock)
+        conditionContainer = lock_data[2]
+        conditionContainer[ condition ].setConditionLabel( name )
 
     def newLock(self, lock):
         ### creo il container e lo aggiungo alla lista di container ###
@@ -308,6 +317,9 @@ class TkView:
 
         ### aggiorno le variabili per il posizionamento ###
         self.currentOrientPosition += 1
+
+        self.modelData.addLockData(lock, [lock_container, wait_data, conditionContainers, self.currentHeightPosition, self.currentOrientPosition%2, lockLabel, currentHeightCanvas, container])
+
 
     def newCondition(self, condition, lock):
          ### prendo il container principale del lock a cui è associata la condition ###
@@ -360,51 +372,337 @@ class TkView:
         self.window.after(50,self.updateCommand)
 
     def start(self):
-        with self.startLock:
-            for key in self.modelData.getLockContainerKeys():
-                containerData=self.modelData.getLockData(key)
-                container = containerData[7]
-                currentOrient=containerData[4]
+        for key in self.modelData.getLockContainerKeys():
+            containerData=self.modelData.getLockData(key)
+            container = containerData[7]
+            currentOrient=containerData[4]
 
-                relX = (20/100)*self.screen_width if currentOrient%2 == 0 else (80/100)*self.screen_width
+            relX = (20/100)*self.screen_width if currentOrient%2 == 0 else (80/100)*self.screen_width
 
-                height = self.currentHeightLeftPosition if currentOrient%2 == 0 else self.currentHeightRightPosition
-                self.primaryCanvas.create_window(relX,height,window=container,anchor='n')
-                containerData[3]=height
-                if(currentOrient%2 != 0):
-                    self.currentHeightRightPosition+=containerData[6]+30
-                else:
-                    self.currentHeightLeftPosition+=containerData[6]+30
-            self.window.after(50, self.updateCommand)
-            self.started = True
+            height = self.currentHeightLeftPosition if currentOrient%2 == 0 else self.currentHeightRightPosition
+            self.primaryCanvas.create_window(relX,height,window=container,anchor='n')
+            containerData[3]=height
+            if(currentOrient%2 != 0):
+                self.currentHeightRightPosition+=containerData[6]+30
+            else:
+                self.currentHeightLeftPosition+=containerData[6]+30
+        self.window.after(50, self.update)
+
+    def changeThreadName( self, label, textField, menu, button ):
+        threads = {}
+        for thread in self.modelData.getThreads():
+            threads[ thread.getName() ] = thread
+        threads[ label['text'] ].name = textField.get( '1.0', 'end-1c' )
+        label.configure( text = 'Name modified!' )
+        menu.delete(0, len(self.modelData.getThreads())-1 )
+        for thread in self.modelData.getThreads():
+            calling_data = partial( self.setLabel, label, thread.getName(), textField, button )
+            menu.add_command( label = thread.getName(), command = calling_data )
+        button.configure( state = 'disabled' )
+        textField.configure( state = 'disabled' )
+        
+    def createPopupThread( self ):
+        popup = Toplevel()
+        popup.title( 'Change thread name' )
+        popup.geometry( '400x200' )
+        menu = Menu( popup )
+        popup.config( menu = menu )
+        threadBar = Menu( menu, tearoff = 0 )
+        label=Label( popup, text = '' )
+        label.place( rely = 0.25, relx = 0.5, anchor = 'n' )
+        textField = Text( popup, state='disabled' )
+        textField.place( relx = 0.5, rely = 0.40, relheight = 0.2, relwidth = 0.5, anchor = 'n' )      
+        button = createAndEmplaceButton( popup, 'Change name', None, relx = 0.5, rely = 1, anchor = 's')
+        button.configure( command = partial( self.changeThreadName, label, textField, threadBar, button ) )
+        for thread in self.modelData.getThreads():
+            calling_data = partial( self.setLabel, label, thread.getName(), textField, button )
+            threadBar.add_command( label = thread.getName(), command = calling_data )
+        menu.add_cascade( label = 'Select thread', menu = threadBar )       
+        popup.mainloop()
+
+    def setLabel( self, label, text, textField, button ):
+        label.configure( text = text )
+        textField.configure( state = "normal" )
+        button.configure( state = "normal" )
+
+    def createPopupLock( self, label ):
+        popup = Toplevel()
+        popup.title( label['text'] )
+        popup.geometry( '400x100' )
+        textField = Text( popup )
+        textField.place( relx = 0, rely = 0, relheight = 0.5, relwidth = 1 )
+        buttonCommand = lambda: ( label.configure( text = textField.get('1.0','end-1c') ) )
+        createAndEmplaceButton( popup, 'Change name', buttonCommand, relx = 0.5, rely = 1, anchor = 's' )
+        popup.mainloop()
+    
+    def setLockName( self, lock, name ):
+        lock_data = self.modelData.getLockData(lock)
+        lock_label = lock_data[5]
+        lock_label.configure( text = name )
+
+    def setAcquireThread( self, thread, lock ):
+        container_data = self.modelData.getLockData(lock)
+        
+        lock_container = container_data[0]
+        tag  = str( thread.ident )
+        wait_container = container_data[1]
+        
+        wait_container.remove( thread )
+        
+        imageHeight = (25/100)*self.lockHeight
+        imageWidth = (50/100)*self.containerWidth
+
+        lock_container.create_image( imageWidth, imageHeight, tag = 'acquireImage'+tag, image = self.computerImage, anchor = 'n' )
+        lock_container.create_text( imageWidth, imageHeight + ( 1.2*self.imageComputerHeight ), text = thread.getName(), tag = 'text' + tag, anchor = 'n', fill = 'green' )
+        lock_container.itemconfigure( 'greyGreenSem', state = "normal" )
+        lock_container.itemconfigure( 'greyRedSem', state = "hidden" )
+        lock_container.itemconfigure( 'redSem', state = "normal" )
+    
+    def setAcquireThreadFromCondition( self, thread, lock, condition ):
+        tag = str( thread.ident )
+        container_data = self.modelData.getLockData(lock)
+        conditionContainer = container_data[2]
+        conditionData = conditionContainer[condition]
+        conditionData.remove(thread)
+        imageHeight = (25/100)*self.lockHeight
+        imageWidth = (50/100)*self.containerWidth
+        lock_container = container_data[0]
+        lock_container.create_image( imageWidth, imageHeight, tag = 'acquireImage' + tag, image = self.computerImage, anchor = 'n' )
+        lock_container.create_text( imageWidth, imageHeight + (1.2*self.imageComputerHeight), text = thread.getName(), tag = 'text' + tag, anchor = 'n', fill = 'green' )
+        lock_container.itemconfigure( 'greyGreenSem', state = "normal" )
+        lock_container.itemconfigure( 'greyRedSem', state = "hidden" )
+        lock_container.itemconfigure( 'redSem', state = "normal" )
+
+    def setThreadInCondition( self, thread, lock, condition ):
+        container_data = self.modelData.getLockData(lock)
+        conditionContainers = container_data[2]
+        conditionData = conditionContainers[condition]
+        conditionData.add(thread)
+        lock_container = container_data[0]
+        lock_container.delete( 'text' + str(thread.ident) )
+        lock_container.delete( 'acquireImage' + str(thread.ident) )
+        lock_container.itemconfigure( 'greyRedSem', state = 'normal' )         
+        lock_container.itemconfigure( 'greyGreenSem', state = "hidden" )
+        time.sleep(2)
+
+    def setReleaseThread( self, thread, lock ):
+        container_data = self.modelData.getLockData(lock)
+        lock_container = container_data[0]
+        height = container_data[3]+( (50/100)*self.containerHeight )
+        orient = container_data[4]
+        tagImage = 'acquireImage' + str(thread.ident)
+        tagText = 'text' + str(thread.ident)
+        
+        tag = "release" + str(thread.ident)
+        
+        if orient == TkView.SINISTRA:
+            width = (12/100)*self.primaryCanvas.winfo_width()
+            self.primaryCanvas.create_image( width, height, tag = 'inactiveimage' + str(thread.ident), image = self.computerImage, anchor = 'n' )
+            self.primaryCanvas.create_text( width, height + (1.2*self.imageComputerHeight), text = thread.getName(), tag = tag, anchor = 'n' )
+        else:
+            width = (88/100)*self.primaryCanvas.winfo_width()
+            self.primaryCanvas.create_image( width, height, tag = 'inactiveimage' + str(thread.ident), image = self.computerImage, anchor = 'n' )
+            self.primaryCanvas.create_text( width, height + (1.2*self.imageComputerHeight), text = thread.getName(), tag = tag, anchor = 'n' )
+        self.__moveInLock( tagImage, tagText, orient, lock_container, lock, thread, tag, False )
+        lock_container.itemconfigure( 'greyRedSem', state = "normal" )
+        self.releasingLock.append(lock)
+        lock_container.after( 500, self.__blinkLock, lock_container, True, lock )
+        sleepTime = ( height + ( self.primaryCanvas.winfo_width()/2 ) - ( (30/100)*self.primaryCanvas.winfo_width() ) )/80
+       
+        return sleepTime
+        
+    def drawFutureLockThread( self, thread, lock ):
+        container_data = self.modelData.getLockData(lock)
+        wait_data = container_data[1]
+        wait_data.drawFutureAcquireThread(thread)
+
+    def notifyLock(self,lock,condition,isAll):
+        container_data = self.modelData.getLockData(lock)
+        conditionContainer = container_data[2]
+        conditionData = conditionContainer[condition]
+        startTime = time.time()
+        red = True
+        grey = "greyRedSem" if not isAll else "greyGreenSem"
+        conditionData.blinkCondition(startTime,red,grey)
+    
+    def __blinkCondition(self,container,startTime,red):
+        currentTime = time.time()
+        if currentTime<=startTime+7:
+            state = "hidden" if red else "normal"
+            container.itemconfigure('greyRedSem',state=state)
+        else:
+            container.itemconfigure('greyRedSem',state='normal')
+
+    def __blinkLock(self,container,currentState,lock):
+        if lock in self.releasingLock:
+            state = 'normal' if currentState else 'hidden'
+            container.itemconfigure('greyRedSem',state=state) 
+
+    #TODO: metodo non sincronizzato
+    def setWaitThread( self, thread, lock ) -> float:
+        
+        container_data = self.modelData.getLockData(lock)
+        
+        tag_param = "wait{0}{1}".format( str(thread.ident), str(lock.getId()) )
+        val_x = int( self.primaryCanvas.winfo_width()/2 )
+        anchor_param = 'n'
+        
+        self.primaryCanvas.create_text( val_x, (105/100)*self.imageComputerHeight, text = thread.getName(), tag = tag_param, anchor = anchor_param )
+        self.primaryCanvas.create_image( val_x, 0, image = self.computerImage, tag = f"image{ str(thread.ident) }", anchor = anchor_param )
+        
+        wait_data = container_data[1]  
+        height = container_data[3] + ((30/100)*self.containerHeight)
+        orient = container_data[4]
+
+        timeStart = time.time()
+        self.__moveFromInactiveToWait( thread, wait_data, height, orient, tag_param, lock, timeStart )
+        self.inactiveData.remove(thread)
             
-            self.startCondition.notifyAll()
+        sleepTime = ( height + ( self.primaryCanvas.winfo_width()/2 ) - ( (30/100)*self.primaryCanvas.winfo_width() ) )/100 
+        return sleepTime
+
+    def __moveFromInactiveToWait( self, thread, wait_container, height, orient, tag, lock, startTime ):
+       
+        if self.primaryCanvas.coords(tag)[1] <= height-(10/100)*self.containerHeight :
+            
+            self.primaryCanvas.move( f"image{ str(thread.ident) }", 0, 2 )
+            self.primaryCanvas.move( tag, 0, 2 )
+            self.primaryCanvas.after( 6, self.__moveFromInactiveToWait, thread, wait_container, height, orient, tag, lock, startTime )
+
+        else:
+            if orient == TkView.SINISTRA:
+                if self.primaryCanvas.coords(tag)[0] >= ( (30/100)*self.primaryCanvas.winfo_width() ):
+                    
+                    self.primaryCanvas.move( tag, -2, 0 )
+                    self.primaryCanvas.move( f"image{ str(thread.ident) }", -2, 0 )
+                    self.primaryCanvas.after( 10, self.__moveFromInactiveToWait, thread, wait_container, height, orient, tag, lock, startTime )
+                
+                else:
+                    wait_container.add( thread, lock )
+                    self.primaryCanvas.delete(tag)
+                    self.primaryCanvas.delete( f"image{ str(thread.ident) }" )
+            
+            else:
+                if self.primaryCanvas.coords(tag)[0] <= ( (70/100)*self.primaryCanvas.winfo_width() ):
+            
+                    self.primaryCanvas.move( tag, 2, 0 )
+                    self.primaryCanvas.move( f"image{ str(thread.ident) }", 2, 0 )
+                    self.primaryCanvas.after( 10, self.__moveFromInactiveToWait, thread, wait_container, height, orient, tag, lock, startTime )
+            
+                else:
+                    wait_container.add( thread, lock )
+                    lock.canAcquire = True
+                    self.primaryCanvas.delete( tag )
+                    self.primaryCanvas.delete( f"image{ str(thread.ident) }" )
+
+    
+    def __moveInLock(self,tagImage, tagText,orient,container,lock,thread,tag,alreadyCalled):
+        if orient == TkView.SINISTRA:
+            if container.coords(tagImage)[0]>0:
+                if container.coords(tagImage)[0]<16:
+                    if not alreadyCalled:
+                        self.__moveFromLockToInactive(tag,thread,orient,lock,container)
+                        alreadyCalled = True
+
+                container.move(tagImage,-1,0)
+                container.move(tagText,-1,0)
+                container.after(2,self.__moveInLock,tagImage, tagText, orient,container,lock,thread,tag,alreadyCalled)
+            else:
+                container.delete(tagImage)
+                container.delete(tagText)
+        else:
+            if container.coords(tagImage)[0]<self.containerWidth:
+                if container.coords(tagImage)[0]>self.containerWidth-32:
+                    if not alreadyCalled:
+                        self.__moveFromLockToInactive(tag,thread,orient,lock,container)
+                        alreadyCalled = True
+
+                container.move(tagImage,1,0)
+                container.move(tagText,1,0)
+                container.after(4,self.__moveInLock,tagImage, tagText, orient,container,lock,thread,tag,alreadyCalled)
+            else:
+                container.delete(tagImage)
+                container.delete(tagText)
+                
+
+    def __moveFromLockToInactive(self,tag,thread,orient,lock,container):
+        
+        if orient == TkView.SINISTRA and  self.primaryCanvas.coords('inactiveimage'+str(thread.ident))[0]>(5/100)*self.primaryCanvas.winfo_width() and self.primaryCanvas.coords('inactiveimage'+str(thread.ident))[1]>0:
+            self.primaryCanvas.move(tag,-1,0)
+            self.primaryCanvas.move('inactiveimage'+str(thread.ident),-1,0)
+            self.primaryCanvas.after(2,self.__moveFromLockToInactive,tag,thread,orient,lock,container)
+        elif orient == TkView.DESTRA and  self.primaryCanvas.coords('inactiveimage'+str(thread.ident))[0]<(95/100)*self.primaryCanvas.winfo_width() and self.primaryCanvas.coords('inactiveimage'+str(thread.ident))[1]>0:
+            self.primaryCanvas.move(tag,1,0)
+            self.primaryCanvas.move('inactiveimage'+str(thread.ident),1,0)
+            self.primaryCanvas.after(2,self.__moveFromLockToInactive,tag,thread,orient,lock,container)
+        else:
+            if self.primaryCanvas.coords('inactiveimage'+str(thread.ident))[1]>0:
+                self.primaryCanvas.move(tag,0,-3)
+                self.primaryCanvas.move('inactiveimage'+str(thread.ident),0,-3)
+                self.primaryCanvas.after(12,self.__moveFromLockToInactive,tag,thread,orient,lock,container)
+            else:
+                if orient == TkView.DESTRA and self.primaryCanvas.coords('inactiveimage'+str(thread.ident))[0]>=((50/100)*self.screen_width)+((50/100)*self.inactiveWidth):# and (self.primaryCanvas.coords('inactiveimage'+thread)[0]<=(50/100)*self.screen_width):                    self.primaryCanvas.move(tag,1,0)
+                    self.primaryCanvas.move('inactiveimage'+str(thread.ident),-2,0)
+                    self.primaryCanvas.move(tag,-2,0)
+                    self.primaryCanvas.after(10,self.__moveFromLockToInactive,tag,thread,orient,lock,container)
+                elif orient == TkView.SINISTRA and self.primaryCanvas.coords('inactiveimage'+str(thread.ident))[0]<=((50/100)*self.screen_width)-((50/100)*self.inactiveWidth):# and self.primaryCanvas.coords('inactiveimage'+thread)[0]>=(50/100)*self.screen_width:                    self.primaryCanvas.move(tag,1,0)
+                    self.primaryCanvas.move('inactiveimage'+str(thread.ident),2,0)
+                    self.primaryCanvas.move(tag,2,0)
+                    self.primaryCanvas.after(10,self.__moveFromLockToInactive,tag,thread,orient,lock,container)
+                else:
+                    self.primaryCanvas.delete(tag)
+                    self.primaryCanvas.delete('inactiveimage'+str(thread.ident))
+                    self.inactiveData.add(thread,lock)
+                    self.releasingLock.remove(lock)
+                    container.itemconfigure('greyRedSem',state='normal')         
+                    container.itemconfigure('greyGreenSem',state="hidden")
+
+    def mainloop(self):
         self.window.mainloop()
 
+    def destroy(self):
+        self.window.destroy()
 
-    def initInstance(self, play, stop, next, popup, update, close):
+    def initInstance(self, play, stop, next, close):
         self.playButton.configure(command = play)
         self.stopButton.configure(command = stop)
         self.nextStepButton.configure(command = next)
-        self.changeThreadButton.configure(command = popup)
-        self.updateCommand = update
+        self.changeThreadButton.configure(command = self.createPopupThread)
+        self.updateCommand = self.update
         self.window.protocol( 'WM_DELETE_WINDOW', close )
 
+
+@singleton
+class SingletonTkView(TkView):
     pass
 
-
 def setup() -> TkView:
-    TkViewInstance = TkView()
 
-    GeneralEventHandler().registerCallback('init', TkViewInstance.initInstance)
-    GeneralEventHandler().registerCallback('play', TkViewInstance.play)
-    GeneralEventHandler().registerCallback('stop', TkViewInstance.stop)
-    GeneralEventHandler().registerCallback('start', TkViewInstance.start)
+    print(f'attempiting to set up callbacks')
 
-    ThreadEventHandler().registerCallback('add', TkViewInstance.newThread)
+    GeneralBroker().registerCallback('init', SingletonTkView().initInstance)
+    GeneralBroker().registerCallback('start', SingletonTkView().start)
+    GeneralBroker().registerCallback('play', SingletonTkView().play)
+    GeneralBroker().registerCallback('stop', SingletonTkView().stop)
+    GeneralBroker().registerCallback('mainloop', SingletonTkView().mainloop)
+    GeneralBroker().registerCallback('destroy', SingletonTkView().destroy)
 
-    LockEventHandler().registerCallback('add', TkViewInstance.newLock)
+    ThreadBroker().registerCallback('add', SingletonTkView().newThread)
+    ThreadBroker().registerCallback('changeThreadName', SingletonTkView().changeThreadName)
 
-    ConditionEventHandler().registerCallback('add', TkViewInstance.newCondition)
+    LockBroker().registerCallback('add', SingletonTkView().newLock)
+    LockBroker().registerCallback('setWaitThread', SingletonTkView().setWaitThread)
+    LockBroker().registerCallback('drawFutureLockThread', SingletonTkView().drawFutureLockThread)
+    LockBroker().registerCallback('setAcquireThread', SingletonTkView().setAcquireThread)
+    LockBroker().registerCallback('setAcquireThreadFromCondition', SingletonTkView().setAcquireThreadFromCondition)
+    LockBroker().registerCallback('setReleaseThread', SingletonTkView().setReleaseThread)
+    LockBroker().registerCallback('setThreadInCondition', SingletonTkView().setThreadInCondition)
+    LockBroker().registerCallback('setLockName', SingletonTkView().setLockName)
 
-    return TkViewInstance
+    ConditionBroker().registerCallback('add', SingletonTkView().newCondition)
+    ConditionBroker().registerCallback('notifyLock', SingletonTkView().notifyLock)
+    ConditionBroker().registerCallback('setConditionName', SingletonTkView().setConditionName)
+
+    print('callbacks set')
+
+    return SingletonTkView()

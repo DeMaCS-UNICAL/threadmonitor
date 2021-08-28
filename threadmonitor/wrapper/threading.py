@@ -18,6 +18,7 @@ class Lock():
         Lock.__id += 1
         # view
         self.controller = controller.SingletonController()
+        print(f'{self} attempting to register to Controller')
         self.controller.addLock(self)
         # wait
         self.waitLock = std_threading.Lock()

@@ -3,71 +3,100 @@
 
 
 import threading
+import copy
+from typing import Any
 from threadmonitor.utils import singleton
 
 
-class Event(list):
+class _Topic(list):
     def __call__(self, *args, **kwargs):
-        for f in self:
-            f(*args, **kwargs)
+        print(f'callbacks being executed: {self}')
+        return [f(*args, **kwargs) for f in self]
 
     def __repr__(self):
-        return "Event(%s)" % list.__repr__(self)
+        return "Topic(%s)" % list.__repr__(self)
 
 
-class EventHandler:
-    def __init__(self) -> None:
-        self.events = {}
+class Broker:
+    def __init__(self, topicType: _Topic) -> None:
+        self.topics = {}
         self.lock = threading.Lock()
-        self.condition = threading.Condition(self.lock)
+        self.callbackCondition = threading.Condition(self.lock)
+        self.topicType = topicType
 
-    def registerEvent(self, key: str, ev: Event) -> Event:
-        try:
-            self.lock.acquire()
-            self.events[key] = ev
-            self.condition.notifyAll()
-            self.lock.release()
-        finally:
-            return self.events[key]
+    def _register(self, key: str):
+        if key not in self.topics.keys():
+            print(f'{self} registering topic {key}')
+            self.topics[key] = self.topicType()
 
-    def registerCallback(self, key, callback):
+    def registerTopic(self, key: str):
         with self.lock:
-            while key not in self.events.keys():
-                self.condition.wait()
-            self.events[key].append(callback)
+            self._register(key)
+            
+    def registerCallback(self, key, callback, register = True):
+        with self.lock:
+            if register:
+                self._register(key)
+            self.topics[key].append(callback)
+            print(f'{self} registered callback to {key}')
+            self.callbackCondition.notifyAll()
+
+    def sendAndRecieve(self, key: str, register = True, *args, **kwargs) -> list:
+        with self.lock:
+            if register:
+                self._register(key)
+            if key in self.topics.keys():
+                topic = self.topics[key]
+                while not topic:
+                    self.callbackCondition.wait()
+                return copy.deepcopy( topic(*args, **kwargs) )
+            return []
+
+    def send(self, key: str, register = True, *args, **kwargs) -> None:
+        with self.lock:
+            if register:
+                self._register(key)
+            if key in self.topics.keys():
+                topic = self.topics[key]
+                print(f'{self} acquired topic, waiting for callbacks to be registered')
+                while not topic:
+                    self.callbackCondition.wait()
+                print(f'{self} topic ready, executing call to topic {key}')
+                topic(*args, **kwargs)
 
 
-@singleton
-class ThreadEventHandler(EventHandler):
+class _ThreadTopic(_Topic):
     pass
 
-class ThreadEvent(Event):
-    def __init__(self, key: str):
-        ThreadEventHandler().registerEvent(key, self)
-    
-
 @singleton
-class LockEventHandler(EventHandler):
+class ThreadBroker(Broker):
+    def __init__(self) -> None:
+        super().__init__(_ThreadTopic)
+
+
+class _LockTopic(_Topic):
     pass
 
-class LockEvent(Event):
-    def __init__(self, key: str):
-        LockEventHandler().registerEvent(key, self)
-
-
 @singleton
-class ConditionEventHandler(EventHandler):
+class LockBroker(Broker):
+    def __init__(self) -> None:
+        super().__init__(_LockTopic)
+
+
+class _ConditionTopic(_Topic):
     pass
 
-class ConditionEvent(Event):
-    def __init__(self, key: str):
-        ConditionEventHandler().registerEvent(key, self)
-
-
 @singleton
-class GeneralEventHandler(EventHandler):
+class ConditionBroker(Broker):
+    def __init__(self) -> None:
+        super().__init__(_ConditionTopic)
+
+
+
+class _GeneralTopic(_Topic):    
     pass
 
-class GeneralEvent(Event):    
-    def __init__(self, key: str):
-        GeneralEventHandler().registerEvent(key, self)
+@singleton
+class GeneralBroker(Broker):
+    def __init__(self) -> None:
+        super().__init__(_GeneralTopic)

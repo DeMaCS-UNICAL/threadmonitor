@@ -82,4 +82,18 @@ Changelog:
 2021/08/27
 - (W.I.P.) implemented TkView in tk.py
 - implemented setup system for views in view.__init__.py
-- KNOWN ISSUES: not working
+- reworked event system, now it's more Publish-Subscribe like
+- renamed Event to Topic
+- renamed EventHandler to Broker
+- created SingletonTkView
+- KNOWN ISSUES: second screen not working
+
+2021/08/28
+- reworked startGraph in library init and view_init in view module init
+- changed sendMessage to send and sendAndRecieve to handle different scenarios
+- Broker.send and Broker.sendAndRecieve register the publishing topics by default
+- Broker.send and Broker.sendAndRecieve wait for at least one callback to be registered to the topic before firing
+- changed Topic to handle callback return values
+- Broker.registerCallback register the subscribed topics by default
+- Controller and TkView are now totally separated
+- KNOWN ISSUES: still not working as intended
