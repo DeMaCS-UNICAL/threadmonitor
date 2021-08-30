@@ -695,7 +695,6 @@ def setup() -> TkView:
     GeneralBroker().registerCallback('start', SingletonTkView().start)
     GeneralBroker().registerCallback('play', SingletonTkView().play)
     GeneralBroker().registerCallback('stop', SingletonTkView().stop)
-    GeneralBroker().registerCallback('update', SingletonTkView().update)
     GeneralBroker().registerCallback('mainloop', SingletonTkView().mainloop)
 
     ThreadBroker().registerCallback('add', SingletonTkView().newThread)
