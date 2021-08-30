@@ -1,9 +1,9 @@
 # coding=utf-8
 
+from threadmonitor.model.logic import LogicThreadInterface
 import threadmonitor.controller as controller
 import threading as std_threading
 import time
-import os
 
 
 class Lock():
@@ -33,11 +33,9 @@ class Lock():
         self.condionThread = {}
     
     def acquire( self, blocking = True, timeout = -1 ) -> bool:
-        # sembra fare principalmente operazioni grafiche sotto waitLock
         with self.waitLock:
             self.isReleased = False
             self.controller.run()
-            # puramente operazioni grafiche?
             sleepTime = self.controller.setWaitThread( current_thread(), self )
             time.sleep( sleepTime )
         # vera chiamata a threading.lock.acquire
@@ -48,7 +46,6 @@ class Lock():
         self.controller.setAcquireThread( current_thread(), self )
         time.sleep(3)
         # return della chiamata a threading.lock.acquire
-        # problema di asincronia?
         return ret
     
     def release(self) -> None:
@@ -83,7 +80,7 @@ class Lock():
         self.controller.setLockName( self, name )
 
 
-class Thread(std_threading.Thread):
+class Thread(LogicThreadInterface):
     """
     Wrapper della classe Thread
     """
@@ -96,9 +93,7 @@ class Thread(std_threading.Thread):
         self.controller = controller.SingletonController()
         self.controller.addThread(self)
     
-    #TODO: non-compliant colla libreria standard, da decidere come sostituirlo (exceptionhook?)
-    def exit(self):
-        os._exit(0)     
+         
 
 
 class Condition(std_threading.Condition):

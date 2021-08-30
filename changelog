@@ -97,3 +97,9 @@ Changelog:
 - Broker.registerCallback register the subscribed topics by default
 - Controller and TkView are now totally separated
 - KNOWN ISSUES: still not working as intended
+
+2021/08/30
+- eliminated 'init', 'update' and 'destroy' topics, now TkView initialization callbacks are static
+- fixed GUI crashing: apparently it's based on a callback interaction between Controller and TkView
+- created LogicalThreadInterface in model.py to offer a way to the view to kill threads upon closing
+- KNOWN ISSUES: circular import?

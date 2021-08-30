@@ -1,6 +1,6 @@
+import threadmonitor
 from threadmonitor.wrapper.threading import Lock, Thread, Condition, get_ident
 from time import sleep
-from threadmonitor import startGraph
 import threading
 
 printLock = threading.Lock()
@@ -53,9 +53,10 @@ if __name__ == "__main__":
     threads = []
     print('initializing threads')
     for i in range(4):
-        t = MyThread(structure3,structure2,structure1)
-        threads.append(t)
+        t = MyThread( structure3, structure2, structure1 )
+        threads.append( t )
     print('starting threads')
     for t in threads:
         t.start()
-    print('starting threadmonitor')
+
+    threadmonitor.startGraph()

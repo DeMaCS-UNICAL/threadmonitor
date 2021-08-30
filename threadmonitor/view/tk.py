@@ -1,6 +1,8 @@
 # coding=utf-8
 
 from functools import partial
+import threading
+from threadmonitor.controller import SingletonController
 from threadmonitor.model.events import ConditionBroker, GeneralBroker, LockBroker, ThreadBroker
 from tkinter import ttk
 from tkinter import * 
@@ -9,7 +11,7 @@ from PIL import ImageTk
 import time
 from threadmonitor.utils import getResourceFromName, overrides, singleton
 import threadmonitor.model.logic as model
-
+import pdb
 
 def createAndEmplaceButton(master, text, command, **placeArgs) -> Button:
     """
@@ -159,6 +161,10 @@ class WaitContainer(AbstractTkContainer):
     def postAdd(self, thread, lock) -> None:
         lock.canAcquire = True
 
+    @overrides(AbstractTkContainer)
+    def removeCondition(self, obj) -> bool:
+        return obj in self.threads
+
 
 class TkView:
 
@@ -228,8 +234,8 @@ class TkView:
 
         self.inactiveCanvas = Canvas( self.primaryCanvas, background = 'white', highlightthickness = 1, highlightbackground = "black", height = 150, width = self.inactiveWidth )
 
-        self.changeThreadButton = Button( self.inactiveCanvas, text = "Change thread name", command = None )
-        self.changeThreadButton.place( relx = 0.5, rely = 0, anchor = 'n' )
+        changeThreadButton = Button( self.inactiveCanvas, text = "Change thread name", command = self.createPopupThread )
+        changeThreadButton.place( relx = 0.5, rely = 0, anchor = 'n' )
 
         self.inactiveScroll = ttk.Scrollbar( self.inactiveCanvas, orient = HORIZONTAL, command = self.inactiveCanvas.xview )
         self.inactiveScroll.place( relx = 0.5, rely = 0.93, width = 305, anchor = 'center' )
@@ -241,9 +247,9 @@ class TkView:
 
         self.primaryCanvas.create_window( self.screen_width/2, 0, window = self.inactiveCanvas, anchor = 'n' )
 
-        self.playButton = createAndEmplaceButton( self.primaryCanvas, 'play', None, relx = 0.93, rely = 0.02, relheight = 0.025 )
-        self.stopButton = createAndEmplaceButton( self.primaryCanvas, 'pause', None, relx = 0.93, rely = 0.045, relheight = 0.025 )
-        self.nextStepButton = createAndEmplaceButton( self.primaryCanvas, 'next step', None, relx = 0.93, rely = 0.070, relheight = 0.025 )
+        self.playButton = createAndEmplaceButton( self.primaryCanvas, 'play', SingletonController().play, relx = 0.93, rely = 0.02, relheight = 0.025 )
+        self.stopButton = createAndEmplaceButton( self.primaryCanvas, 'pause', SingletonController().stop, relx = 0.93, rely = 0.045, relheight = 0.025 )
+        self.nextStepButton = createAndEmplaceButton( self.primaryCanvas, 'next step', SingletonController().next_step, relx = 0.93, rely = 0.070, relheight = 0.025 )
         self.nextStepButton.configure( state = 'disabled' )
 
         ### Inizializzazioni immagini ###
@@ -253,10 +259,15 @@ class TkView:
         self.redSem = getPhotoImage( 'redSem.png', (15, 15), self.primaryCanvas )
         self.greenSem = getPhotoImage( 'greenSem.png', (15, 15), self.primaryCanvas )
         self.greySem = getPhotoImage( 'greySem.png', (15, 15), self.primaryCanvas )
+
+        self.updateCmd = self.update
+
+        self.window.update_idletasks()
+
+        self.window.after( 50, self.updateCmd )
+        self.window.protocol( 'WM_DELETE_WINDOW', self.destroy )
         
         self.inactiveData = InactiveContainer( self.inactiveCanvas, self.computerImage )
-
-        self.updateCommand = None
 
     def play(self):
         self.stopButton.configure( state = 'normal' )
@@ -268,7 +279,7 @@ class TkView:
         self.nextStepButton.configure( state = 'normal' )
         self.primaryCanvas.configure( background = '#696969' )
 
-    def newThread(self) -> None:
+    def newThread(self, thread) -> None:
         return
 
     def setConditionName( self, condition, lock, name ):
@@ -369,7 +380,7 @@ class TkView:
             value.configure( scrollregion = value.bbox("all") )
         for container in self.conditions:
             container.configure(scrollregion=container.bbox("all"))
-        self.window.after(50,self.updateCommand)
+        self.window.after(50, self.update)
 
     def start(self):
         for key in self.modelData.getLockContainerKeys():
@@ -386,7 +397,7 @@ class TkView:
                 self.currentHeightRightPosition+=containerData[6]+30
             else:
                 self.currentHeightLeftPosition+=containerData[6]+30
-        self.window.after(50, self.update)
+        self.window.after(50, self.updateCmd)
 
     def changeThreadName( self, label, textField, menu, button ):
         threads = {}
@@ -538,18 +549,25 @@ class TkView:
             state = 'normal' if currentState else 'hidden'
             container.itemconfigure('greyRedSem',state=state) 
 
-    #TODO: metodo non sincronizzato
     def setWaitThread( self, thread, lock ) -> float:
-        
+
         container_data = self.modelData.getLockData(lock)
-        
+
         tag_param = "wait{0}{1}".format( str(thread.ident), str(lock.getId()) )
+        print(f'{self} parameter tag_param: {tag_param}')
         val_x = int( self.primaryCanvas.winfo_width()/2 )
+        print(f'{self} parameter val_x: {val_x}')
         anchor_param = 'n'
-        
-        self.primaryCanvas.create_text( val_x, (105/100)*self.imageComputerHeight, text = thread.getName(), tag = tag_param, anchor = anchor_param )
-        self.primaryCanvas.create_image( val_x, 0, image = self.computerImage, tag = f"image{ str(thread.ident) }", anchor = anchor_param )
-        
+
+        try:
+            #pdb.set_trace()
+            self.primaryCanvas.create_text( val_x, (105/100)*self.imageComputerHeight, text = thread.getName(), tag = tag_param, anchor = anchor_param )
+            #pdb.set_trace()
+            self.primaryCanvas.create_image( val_x, 0, image = self.computerImage, tag = f"image{ str(thread.ident) }", anchor = anchor_param )
+        except Exception as e:
+            print(e)
+        print(f'{self} canvas updated')
+
         wait_data = container_data[1]  
         height = container_data[3] + ((30/100)*self.containerHeight)
         orient = container_data[4]
@@ -562,7 +580,7 @@ class TkView:
         return sleepTime
 
     def __moveFromInactiveToWait( self, thread, wait_container, height, orient, tag, lock, startTime ):
-       
+
         if self.primaryCanvas.coords(tag)[1] <= height-(10/100)*self.containerHeight :
             
             self.primaryCanvas.move( f"image{ str(thread.ident) }", 0, 2 )
@@ -662,14 +680,8 @@ class TkView:
 
     def destroy(self):
         self.window.destroy()
-
-    def initInstance(self, play, stop, next, close):
-        self.playButton.configure(command = play)
-        self.stopButton.configure(command = stop)
-        self.nextStepButton.configure(command = next)
-        self.changeThreadButton.configure(command = self.createPopupThread)
-        self.updateCommand = self.update
-        self.window.protocol( 'WM_DELETE_WINDOW', close )
+        for thread in self.modelData.getThreads():
+            thread.exit()
 
 
 @singleton
@@ -680,15 +692,13 @@ def setup() -> TkView:
 
     print(f'attempiting to set up callbacks')
 
-    GeneralBroker().registerCallback('init', SingletonTkView().initInstance)
     GeneralBroker().registerCallback('start', SingletonTkView().start)
     GeneralBroker().registerCallback('play', SingletonTkView().play)
     GeneralBroker().registerCallback('stop', SingletonTkView().stop)
+    GeneralBroker().registerCallback('update', SingletonTkView().update)
     GeneralBroker().registerCallback('mainloop', SingletonTkView().mainloop)
-    GeneralBroker().registerCallback('destroy', SingletonTkView().destroy)
 
     ThreadBroker().registerCallback('add', SingletonTkView().newThread)
-    ThreadBroker().registerCallback('changeThreadName', SingletonTkView().changeThreadName)
 
     LockBroker().registerCallback('add', SingletonTkView().newLock)
     LockBroker().registerCallback('setWaitThread', SingletonTkView().setWaitThread)

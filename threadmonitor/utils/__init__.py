@@ -1,4 +1,5 @@
 import os
+import threading
 
 def getResourceFromName(filename: str) -> str:
     """
@@ -13,6 +14,19 @@ def getResourceFromName(filename: str) -> str:
 def singleton(class_):
     """
     Fa si che ogni chiamata al costruttore generi un'unica istanza della classe annotata.
+    """
+    instances = {}
+    lock = threading.Lock()
+    def _getinstance(*args, **kwargs):
+        if class_ not in instances:
+            with lock:
+                if class_ not in instances:
+                    instances[class_] = class_(*args, **kwargs)
+        return instances[class_]
+    return _getinstance
+
+def threadBound(class_):
+    """
     """
     instances = {}
     def _getinstance(*args, **kwargs):

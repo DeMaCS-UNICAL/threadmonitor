@@ -11,7 +11,9 @@ from threadmonitor.utils import singleton
 class _Topic(list):
     def __call__(self, *args, **kwargs):
         print(f'callbacks being executed: {self}')
-        return [f(*args, **kwargs) for f in self]
+        ret = [f(*args, **kwargs) for f in self]
+        print(f'returning results of call: {ret}')
+        return ret
 
     def __repr__(self):
         return "Topic(%s)" % list.__repr__(self)

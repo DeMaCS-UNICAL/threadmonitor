@@ -2,6 +2,7 @@ from abc import abstractmethod
 from typing import Any, KeysView
 from threadmonitor.utils import singleton
 import threading
+import os
 
 class LogicData:
     def __init__(self) -> None:
@@ -43,7 +44,12 @@ class LogicData:
             self.waitContainer[key] = value
 
     def getThreads(self) -> list:
-        return self.threads
+        with self.lock:
+            return self.threads
+
+    def removeThread(self, thread) -> None:
+        with self.lock:
+            self.threads.remove(thread)
 
 
 @singleton
@@ -95,3 +101,17 @@ class AbstractContainer:
 
     def postAdd(self, thread, lock) -> None:
         return
+
+class LogicThreadInterface(threading.Thread):
+    """
+    Wrapper della classe Thread
+    """
+
+    def __init__(self, group = None, target = None, name = None, args = (), kwargs = {}, *, daemon = True):
+        """
+        default list of Thread.__init__ function arguments: necessario per garantire la retrocompatibilità
+        """
+        super().__init__(group = group, target = target, name = name, args = args, kwargs = kwargs, daemon = daemon)
+    
+    def exit(self):
+        os._exit(0)

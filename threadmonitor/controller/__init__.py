@@ -1,4 +1,3 @@
-import threading
 from threadmonitor.model.events import *
 from threadmonitor.utils import singleton
 import threading
@@ -9,20 +8,14 @@ class Controller:
     
     def __init__(self):
         self.stepLock = threading.Lock()
-        self.stepCondition = threading.Condition(self.stepLock)
+        self.stepCondition = threading.Condition( self.stepLock ) 
         
         self.started = False
         self.startLock = threading.Lock()
         self.startCondition = threading.Condition( self.startLock )
 
-        print(f'{self} concurrency structures initialized')
-
         self.modelData = model.SingletonLogic()
-
         self.stopAndPlay = StopAndPlay(self)
-
-        print(f'{self} => view initialization')
-        GeneralBroker().send(key = 'init', play = self.play, stop = self.stop, next = self.next_step, close = self.__onclose)
 
     def play(self):
         with self.stepLock:
@@ -39,25 +32,43 @@ class Controller:
             GeneralBroker().send(key = 'next')
             self.stopAndPlay.next_step()
 
-    def changeThreadName( self, label, textField, menu, button ):
-        ThreadBroker().send(key='changeThreadName', label=label, textField=textField, menu=menu, button=button)
+    def start(self):
+        try:
+            self.startLock.acquire()
+            GeneralBroker().send(key = 'start')
+            self.started = True
+            
+        except Exception as e:
+            print(e)
+        finally:
+            self.startCondition.notifyAll()
+            self.startLock.release()
+            GeneralBroker().send(key = 'mainloop')
+
+    def update(self):
+        GeneralBroker().send(key = 'update')
+        
+    def run(self):
+        with self.stepLock:
+            self.stopAndPlay.run()
         
     def addThread( self, thread ):
-        self.modelData.getThreads().append(thread)
-        ThreadBroker().send(key = 'add', thread=thread)
+        with self.stepLock:
+            self.modelData.getThreads().append(thread)
+            ThreadBroker().send(key = 'add', thread=thread)
+
+    def addLock( self, lock ):
+        with self.stepLock:
+            LockBroker().send(key = 'add', lock = lock)        
+        
+    def addCondition( self, condition, lock ):
+        with self.stepLock:
+            ConditionBroker().send(key = 'add', condition = condition, lock = lock)
 
     def setLockName( self, lock, name ):
         LockBroker().send(key = 'setLockName', lock = lock, name = name)
 
-    def addLock( self, lock ):
-        LockBroker().send(key = 'add', lock = lock)        
-        
-    def addCondition( self, condition, lock ):
-        ConditionBroker().send(key = 'add', condition = condition, lock = lock)
-
-    #TODO: metodo non sincronizzato
     def setWaitThread( self, thread, lock ) -> float:
-        
         if not self.started:
             self.startLock.acquire()
             while not self.started:
@@ -92,28 +103,6 @@ class Controller:
     
     def setConditionName(self, condition, lock, name):
         ConditionBroker().send(key='setConditionName', condition = condition, lock = lock, name = name)
-
-    def start(self):
-        try:
-            self.startLock.acquire()
-            GeneralBroker().send(key = 'start')
-            self.started = True
-            
-        except Exception as e:
-            print(e)
-        finally:
-            self.startCondition.notifyAll()
-            self.startLock.release()
-            GeneralBroker().send(key = 'mainloop')
-
-    def __onclose(self):
-        GeneralBroker().send(key = 'destroy')
-        for thread in self.modelData.getThreads():
-            thread.exit()
-
-    def run(self):
-        with self.stepLock:
-            self.stopAndPlay.run()
 
 
 @singleton
