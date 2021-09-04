@@ -1,7 +1,7 @@
+import threadmonitor
 from threadmonitor.wrapper.threading import Lock,Thread,Condition
 from random import random,randrange
 from time import sleep
-from threadmonitor import startGraph
 
 class Structure:
     def __init__(self):
@@ -32,7 +32,7 @@ if __name__ == "__main__":
         thr.start()
 
     #TODO: eliminare la necessità di un avvio esplicito della vista
-    startGraph()
+    threadmonitor.startGraph()
 
     for thr in threads:
         thr.join()

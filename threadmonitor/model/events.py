@@ -9,11 +9,16 @@ from threadmonitor.utils import singleton
 
 
 class _Topic(list):
+    def __init__(self):
+        super().__init__()
+        self.lock = threading.Lock()
+
     def __call__(self, *args, **kwargs):
-        print(f'callbacks being executed: {self}')
-        ret = [f(*args, **kwargs) for f in self]
-        print(f'returning results of call: {ret}')
-        return ret
+        with self.lock:
+            #print(f'callbacks being executed: {self}')
+            ret = [f(*args, **kwargs) for f in self]
+            #print(f'returning results of call: {ret}')
+            return ret
 
     def __repr__(self):
         return "Topic(%s)" % list.__repr__(self)
@@ -27,44 +32,46 @@ class Broker:
         self.topicType = topicType
 
     def _register(self, key: str):
-        if key not in self.topics.keys():
-            print(f'{self} registering topic {key}')
-            self.topics[key] = self.topicType()
+        with self.lock:
+            if key not in self.topics.keys():
+                #print(f'{self} registering topic {key}')
+                self.topics[key] = self.topicType()
 
     def registerTopic(self, key: str):
-        with self.lock:
-            self._register(key)
+        self._register(key)
             
     def registerCallback(self, key, callback, register = True):
+        if register:
+            self._register(key)
         with self.lock:
-            if register:
-                self._register(key)
             self.topics[key].append(callback)
-            print(f'{self} registered callback to {key}')
+            #print(f'{self} registered callback to {key}')
             self.callbackCondition.notifyAll()
 
     def sendAndRecieve(self, key: str, register = True, *args, **kwargs) -> list:
-        with self.lock:
-            if register:
-                self._register(key)
-            if key in self.topics.keys():
-                topic = self.topics[key]
+        if register:
+            self._register(key)
+        if key in self.topics.keys():
+            topic = self.topics[key]
+            with self.lock:
                 while not topic:
+                    #print(f'{self} acquired topic, waiting for callbacks to be registered')
                     self.callbackCondition.wait()
-                return copy.deepcopy( topic(*args, **kwargs) )
-            return []
+            #print(f'{self} topic ready, executing call to topic {key}')
+            return copy.deepcopy( topic(*args, **kwargs) )
+        return []
 
     def send(self, key: str, register = True, *args, **kwargs) -> None:
-        with self.lock:
-            if register:
-                self._register(key)
-            if key in self.topics.keys():
-                topic = self.topics[key]
-                print(f'{self} acquired topic, waiting for callbacks to be registered')
+        if register:
+            self._register(key)
+        if key in self.topics.keys():
+            topic = self.topics[key]
+            with self.lock:
                 while not topic:
+                    #print(f'{self} acquired topic, waiting for callbacks to be registered')
                     self.callbackCondition.wait()
-                print(f'{self} topic ready, executing call to topic {key}')
-                topic(*args, **kwargs)
+            #print(f'{self} topic ready, executing call to topic {key}')
+            topic(*args, **kwargs)
 
 
 class _ThreadTopic(_Topic):

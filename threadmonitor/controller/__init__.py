@@ -17,20 +17,20 @@ class Controller:
         self.modelData = model.SingletonLogic()
         self.stopAndPlay = StopAndPlay(self)
 
+        GeneralBroker().registerCallback('playBack', self.play)
+        GeneralBroker().registerCallback('stopBack', self.stop)
+        GeneralBroker().registerCallback('next_stepBack', self.next_step)
+
     def play(self):
-        with self.stepLock:
-            GeneralBroker().send(key = 'play')
-            self.stopAndPlay.play()
+        #print(f'starting play controller-side')
+        self.stopAndPlay.play()
     
     def stop(self):
-        with self.stepLock:
-            GeneralBroker().send(key = 'stop')
-            self.stopAndPlay.stop()
+        #print(f'starting stop controller-side')
+        self.stopAndPlay.stop()
 
     def next_step(self):
-        with self.stepLock:
-            GeneralBroker().send(key = 'next')
-            self.stopAndPlay.next_step()
+        self.stopAndPlay.next_step()
 
     def start(self):
         try:
@@ -44,36 +44,28 @@ class Controller:
             self.startCondition.notifyAll()
             self.startLock.release()
             GeneralBroker().send(key = 'mainloop')
-
-    def update(self):
-        GeneralBroker().send(key = 'update')
         
     def run(self):
-        with self.stepLock:
-            self.stopAndPlay.run()
+        self.stopAndPlay.run()
         
     def addThread( self, thread ):
-        with self.stepLock:
-            self.modelData.getThreads().append(thread)
-            ThreadBroker().send(key = 'add', thread=thread)
+        self.modelData.getThreads().append(thread)
+        ThreadBroker().send(key = 'add', thread=thread)
 
     def addLock( self, lock ):
-        with self.stepLock:
-            LockBroker().send(key = 'add', lock = lock)        
+        LockBroker().send(key = 'add', lock = lock)        
         
     def addCondition( self, condition, lock ):
-        with self.stepLock:
-            ConditionBroker().send(key = 'add', condition = condition, lock = lock)
+        ConditionBroker().send(key = 'add', condition = condition, lock = lock)
 
     def setLockName( self, lock, name ):
         LockBroker().send(key = 'setLockName', lock = lock, name = name)
 
     def setWaitThread( self, thread, lock ) -> float:
         if not self.started:
-            self.startLock.acquire()
-            while not self.started:
-                self.startCondition.wait()
-            self.startLock.release()
+            with self.startLock:
+                while not self.started:
+                    self.startCondition.wait()
             time.sleep(0.05)
 
         response = LockBroker().sendAndRecieve(key = 'setWaitThread', thread = thread, lock = lock )
@@ -91,18 +83,18 @@ class Controller:
         LockBroker().send(key = 'setThreadInCondition', thread = thread, lock = lock, condition = condition )
 
     def setReleaseThread( self, thread, lock ) -> float:
-        response = LockBroker().sendAndRecieve(key='setReleaseThread', thread = thread, lock = lock )
+        response = LockBroker().sendAndRecieve(key = 'setReleaseThread', thread = thread, lock = lock )
         sleepTime = next(x for x in response if isinstance(x, float)) 
         return sleepTime
         
     def drawFutureLockThread( self, thread, lock ) -> None:
-        LockBroker().send(key='drawFutureLockThread', thread=thread, lock=lock)
+        LockBroker().send(key = 'drawFutureLockThread', thread = thread, lock = lock)
 
     def notifyLock(self,lock,condition,isAll):
-        ConditionBroker().send(key='notifyLock', lock = lock, condition = condition, isAll = isAll)
+        ConditionBroker().send(key = 'notifyLock', lock = lock, condition = condition, isAll = isAll)
     
     def setConditionName(self, condition, lock, name):
-        ConditionBroker().send(key='setConditionName', condition = condition, lock = lock, name = name)
+        ConditionBroker().send(key = 'setConditionName', condition = condition, lock = lock, name = name)
 
 
 @singleton
@@ -112,24 +104,29 @@ class SingletonController(Controller):
 class StopAndPlay:
 
     def __init__(self, controller: Controller):
+        self.lock = controller.stepLock
         self.condition = controller.stepCondition
         self.isStopped = False
         self.step = 0
 
     def stop(self):
-        self.isStopped = True
+        with self.lock: 
+            self.isStopped = True
 
     def play(self):
-        self.isStopped = False
-        self.step = 0
-        self.condition.notifyAll()
+        with self.lock:
+            self.isStopped = False
+            self.step = 0
+            self.condition.notifyAll()
 
     def run(self):
-        if self.isStopped:
-            while self.isStopped and self.step <= 0:
-                self.condition.wait()
-            self.step -= 1
+        with self.lock:
+            if self.isStopped:
+                while self.isStopped and self.step <= 0:
+                    self.condition.wait()
+                self.step -= 1
 
     def next_step(self):
-        self.step += 1
-        self.condition.notifyAll()
+        with self.lock:
+            self.step += 1
+            self.condition.notifyAll()

@@ -103,3 +103,9 @@ Changelog:
 - fixed GUI crashing: apparently it's based on a callback interaction between Controller and TkView
 - created LogicalThreadInterface in model.py to offer a way to the view to kill threads upon closing
 - KNOWN ISSUES: circular import?
+
+2021/09/04
+- found and fixed the source of most KNOWN ISSUES: Broker-Topic concurrency scheme causing starvation
+- various fix to typos and such
+- removed synchronization from Controller methods due to Broker and StopAndPlay role
+- KNOWN ISSUES: occasional crashing on stressTest

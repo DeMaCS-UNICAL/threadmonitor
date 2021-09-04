@@ -53,13 +53,17 @@ if __name__ == "__main__":
 > using pipenv (recommended):
 
 ```shell
-pipenv run install
+pipenv install
+# alternatively, just launch the shell:
+pipenv shell
 ```
 
 > using pipenv (alternative):
 
 ```shell
-py -m pipenv run install
+py -m pipenv install
+# alternatively, just launch the shell:
+py -m pipenv shell
 ```
 
 > using pip:
@@ -67,6 +71,14 @@ py -m pipenv run install
 ```shell
 sudo apt-get install python3-tk
 pip3 install -r requirements.txt 
+```
+
+> using condo:
+
+```shell
+conda create --name p39 python=3.9
+conda activate p39
+conda install -c conda-forge --file requirements.txt
 ```
 
 ---
@@ -83,6 +95,8 @@ For more, refer to the [Sphinx documentation](https://www.sphinx-doc.org/en/mast
 ### Execute tests
 
 ```shell
+# [testname] must be a suitable file in the tests directory
+# OMIT the .py at the end
 py -m tests.[testname]
 ```
 

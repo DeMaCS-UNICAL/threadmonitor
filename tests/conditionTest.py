@@ -1,6 +1,6 @@
+import threadmonitor
 from threadmonitor.wrapper.threading import Lock,Thread,Condition
 from time import sleep
-from threadmonitor import startGraph
 
 class Structure:
     def __init__(self):
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     t3.start()
     t1.start()
 
-    startGraph()
+    threadmonitor.startGraph()
 
     t2.join()
     t3.join()

@@ -1,8 +1,6 @@
 # coding=utf-8
 
 from functools import partial
-import threading
-from threadmonitor.controller import SingletonController
 from threadmonitor.model.events import ConditionBroker, GeneralBroker, LockBroker, ThreadBroker
 from tkinter import ttk
 from tkinter import * 
@@ -11,7 +9,7 @@ from PIL import ImageTk
 import time
 from threadmonitor.utils import getResourceFromName, overrides, singleton
 import threadmonitor.model.logic as model
-import pdb
+
 
 def createAndEmplaceButton(master, text, command, **placeArgs) -> Button:
     """
@@ -247,9 +245,9 @@ class TkView:
 
         self.primaryCanvas.create_window( self.screen_width/2, 0, window = self.inactiveCanvas, anchor = 'n' )
 
-        self.playButton = createAndEmplaceButton( self.primaryCanvas, 'play', SingletonController().play, relx = 0.93, rely = 0.02, relheight = 0.025 )
-        self.stopButton = createAndEmplaceButton( self.primaryCanvas, 'pause', SingletonController().stop, relx = 0.93, rely = 0.045, relheight = 0.025 )
-        self.nextStepButton = createAndEmplaceButton( self.primaryCanvas, 'next step', SingletonController().next_step, relx = 0.93, rely = 0.070, relheight = 0.025 )
+        self.playButton = createAndEmplaceButton( self.primaryCanvas, 'play', self.play, relx = 0.93, rely = 0.02, relheight = 0.025 )
+        self.stopButton = createAndEmplaceButton( self.primaryCanvas, 'pause', self.stop, relx = 0.93, rely = 0.045, relheight = 0.025 )
+        self.nextStepButton = createAndEmplaceButton( self.primaryCanvas, 'next step', self.next_step, relx = 0.93, rely = 0.070, relheight = 0.025 )
         self.nextStepButton.configure( state = 'disabled' )
 
         ### Inizializzazioni immagini ###
@@ -270,14 +268,25 @@ class TkView:
         self.inactiveData = InactiveContainer( self.inactiveCanvas, self.computerImage )
 
     def play(self):
+        #print(f'starting play button')
         self.stopButton.configure( state = 'normal' )
         self.nextStepButton.configure( state = 'disabled' )
         self.primaryCanvas.configure( background = '#A0A0A0' )
+        #print(f'play button view-side complete: sending playBack signal')
+        GeneralBroker().send(key='playBack')
+        #print(f'playSignal complete?!?!?!?')
 
     def stop(self):
+        #print(f'starting stop button')
         self.playButton.configure( state = 'normal' )
         self.nextStepButton.configure( state = 'normal' )
         self.primaryCanvas.configure( background = '#696969' )
+        #print(f'stop button view-side complete: sending stopBack signal')
+        GeneralBroker().send(key='stopBack')
+        #print(f'stopSignal complete?!?!?!?')
+
+    def next_step(self):
+        GeneralBroker().send(key='next_stepBack')
 
     def newThread(self, thread) -> None:
         return
@@ -554,19 +563,13 @@ class TkView:
         container_data = self.modelData.getLockData(lock)
 
         tag_param = "wait{0}{1}".format( str(thread.ident), str(lock.getId()) )
-        print(f'{self} parameter tag_param: {tag_param}')
         val_x = int( self.primaryCanvas.winfo_width()/2 )
-        print(f'{self} parameter val_x: {val_x}')
         anchor_param = 'n'
 
-        try:
-            #pdb.set_trace()
-            self.primaryCanvas.create_text( val_x, (105/100)*self.imageComputerHeight, text = thread.getName(), tag = tag_param, anchor = anchor_param )
-            #pdb.set_trace()
-            self.primaryCanvas.create_image( val_x, 0, image = self.computerImage, tag = f"image{ str(thread.ident) }", anchor = anchor_param )
-        except Exception as e:
-            print(e)
-        print(f'{self} canvas updated')
+        #pdb.set_trace()
+        self.primaryCanvas.create_text( val_x, (105/100)*self.imageComputerHeight, text = thread.getName(), tag = tag_param, anchor = anchor_param )
+        #pdb.set_trace()
+        self.primaryCanvas.create_image( val_x, 0, image = self.computerImage, tag = f"image{ str(thread.ident) }", anchor = anchor_param )
 
         wait_data = container_data[1]  
         height = container_data[3] + ((30/100)*self.containerHeight)
@@ -690,11 +693,9 @@ class SingletonTkView(TkView):
 
 def setup() -> TkView:
 
-    print(f'attempiting to set up callbacks')
+    #print(f'attempiting to set up callbacks')
 
     GeneralBroker().registerCallback('start', SingletonTkView().start)
-    GeneralBroker().registerCallback('play', SingletonTkView().play)
-    GeneralBroker().registerCallback('stop', SingletonTkView().stop)
     GeneralBroker().registerCallback('mainloop', SingletonTkView().mainloop)
 
     ThreadBroker().registerCallback('add', SingletonTkView().newThread)
@@ -712,6 +713,6 @@ def setup() -> TkView:
     ConditionBroker().registerCallback('notifyLock', SingletonTkView().notifyLock)
     ConditionBroker().registerCallback('setConditionName', SingletonTkView().setConditionName)
 
-    print('callbacks set')
+    #print('callbacks set')
 
     return SingletonTkView()
