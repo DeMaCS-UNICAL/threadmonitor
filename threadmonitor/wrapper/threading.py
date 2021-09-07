@@ -102,7 +102,7 @@ class Condition(std_threading.Condition):
     __id = 1
     def __init__(self,lock = None):
         super().__init__(lock)
-        self.__id = Condition.__id
+        self.id = Condition.__id
         Condition.__id += 1
         self.glock = lock
         self.controller = controller.SingletonController()
