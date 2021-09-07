@@ -57,13 +57,8 @@ if __name__ == "__main__":
 > using pipenv (recommended):
 
 ```shell
+sudo apt-get install python3-tk
 pipenv install
-```
-
-> using pipenv (alternative):
-
-```shell
-py -m pipenv install
 ```
 
 > using pip:
@@ -76,6 +71,7 @@ pip3 install -r requirements.txt
 > using condo:
 
 ```shell
+sudo apt-get install python3-tk
 conda create --name p39 python=3.9
 conda activate p39
 conda install -c conda-forge --file requirements.txt
