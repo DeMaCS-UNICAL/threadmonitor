@@ -11,4 +11,4 @@ appunti.txt
 pat
 docs/_build/
 docs/_build/*
-
+logs/log*

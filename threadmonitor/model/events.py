@@ -1,7 +1,3 @@
-#class LockQueue
-#class ConditionQueue
-
-
 import threading
 import copy
 from typing import Any
@@ -41,15 +37,15 @@ class Broker:
         self._register(key)
             
     def registerCallback(self, key, callback, register = True):
-        if register:
+        if register and key not in self.topics.keys():
             self._register(key)
         with self.lock:
             self.topics[key].append(callback)
             #print(f'{self} registered callback to {key}')
             self.callbackCondition.notifyAll()
 
-    def sendAndRecieve(self, key: str, register = True, *args, **kwargs) -> list:
-        if register:
+    def sendAndReceive(self, key: str, register = True, *args, **kwargs) -> list:
+        if register and key not in self.topics.keys():
             self._register(key)
         if key in self.topics.keys():
             topic = self.topics[key]
@@ -62,7 +58,7 @@ class Broker:
         return []
 
     def send(self, key: str, register = True, *args, **kwargs) -> None:
-        if register:
+        if register and key not in self.topics.keys():
             self._register(key)
         if key in self.topics.keys():
             topic = self.topics[key]
@@ -73,39 +69,32 @@ class Broker:
             #print(f'{self} topic ready, executing call to topic {key}')
             topic(*args, **kwargs)
 
-
-class _ThreadTopic(_Topic):
-    pass
+#############################################################################################
 
 @singleton
 class ThreadBroker(Broker):
     def __init__(self) -> None:
-        super().__init__(_ThreadTopic)
+        super().__init__(_Topic)
 
-
-class _LockTopic(_Topic):
-    pass
+#############################################################################################
 
 @singleton
 class LockBroker(Broker):
     def __init__(self) -> None:
-        super().__init__(_LockTopic)
+        super().__init__(_Topic)
 
-
-class _ConditionTopic(_Topic):
-    pass
+#############################################################################################
 
 @singleton
 class ConditionBroker(Broker):
     def __init__(self) -> None:
-        super().__init__(_ConditionTopic)
+        super().__init__(_Topic)
 
-
-
-class _GeneralTopic(_Topic):    
-    pass
+#############################################################################################
 
 @singleton
 class GeneralBroker(Broker):
     def __init__(self) -> None:
-        super().__init__(_GeneralTopic)
+        super().__init__(_Topic)
+
+#############################################################################################

@@ -9,7 +9,7 @@ Library originally made by Guido Scarlato, forked by Davide Caligiuri.
 # to obtain a perfectly valid multithreading code, replace with:
 # from threading import Lock, Thread, Condition
 from threadmonitor.wrapper.threading import Lock, Thread, Condition
-from threadmonitor import startGraph
+import threadmonitor
 
 class Structure:
     def __init__(self):
@@ -20,7 +20,7 @@ class Structure:
         self.lock.acquire()
         self.lock.release()
 
-class MyThread(GraphThread):
+class MyThread(Thread):
     def __init__(self,structure):
         super().__init__()
         self.structure = structure
@@ -40,7 +40,11 @@ if __name__ == "__main__":
     for t in threads:
         t.start()
 
-    startGraph()
+    threadmonitor.startGraph()
+
+    for t in threads:
+        t.join()
+
 ```
 ## Instructions
 ---
@@ -54,16 +58,12 @@ if __name__ == "__main__":
 
 ```shell
 pipenv install
-# alternatively, just launch the shell:
-pipenv shell
 ```
 
 > using pipenv (alternative):
 
 ```shell
 py -m pipenv install
-# alternatively, just launch the shell:
-py -m pipenv shell
 ```
 
 > using pip:
@@ -95,7 +95,7 @@ For more, refer to the [Sphinx documentation](https://www.sphinx-doc.org/en/mast
 ### Execute tests
 
 ```shell
-# [testname] must be a suitable file in the tests directory
+# [testname] must be a suitable source file in the tests directory
 # OMIT the .py at the end
 py -m tests.[testname]
 ```

@@ -92,8 +92,6 @@ class Thread(LogicThreadInterface):
         super().__init__(group = group, target = target, name = name, args = args, kwargs = kwargs, daemon = daemon)
         self.controller = controller.SingletonController()
         self.controller.addThread(self)
-    
-         
 
 
 class Condition(std_threading.Condition):
@@ -101,9 +99,11 @@ class Condition(std_threading.Condition):
     Wrapper della classe Condition
     """
 
-    #TODO: rendere la gestione dei lock trasparente all'utente
+    __id = 1
     def __init__(self,lock = None):
         super().__init__(lock)
+        self.__id = Condition.__id
+        Condition.__id += 1
         self.glock = lock
         self.controller = controller.SingletonController()
         self.name = ""
@@ -130,7 +130,6 @@ class Condition(std_threading.Condition):
         self.controller.setConditionName(self,self.glock,name)
 
 
-#TODO da valutare se qua si può utilizzare anche il Thread di libreria: reflection?
 def current_thread() -> Thread:
     return std_threading.current_thread()
 

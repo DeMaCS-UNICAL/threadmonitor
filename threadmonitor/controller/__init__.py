@@ -68,7 +68,7 @@ class Controller:
                     self.startCondition.wait()
             time.sleep(0.05)
 
-        response = LockBroker().sendAndRecieve(key = 'setWaitThread', thread = thread, lock = lock )
+        response = LockBroker().sendAndReceive(key = 'setWaitThread', thread = thread, lock = lock )
 
         sleepTime = next(x for x in response if isinstance(x, float)) 
         return sleepTime
@@ -83,7 +83,7 @@ class Controller:
         LockBroker().send(key = 'setThreadInCondition', thread = thread, lock = lock, condition = condition )
 
     def setReleaseThread( self, thread, lock ) -> float:
-        response = LockBroker().sendAndRecieve(key = 'setReleaseThread', thread = thread, lock = lock )
+        response = LockBroker().sendAndReceive(key = 'setReleaseThread', thread = thread, lock = lock )
         sleepTime = next(x for x in response if isinstance(x, float)) 
         return sleepTime
         
