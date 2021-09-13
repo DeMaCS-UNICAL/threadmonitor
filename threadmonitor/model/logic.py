@@ -5,6 +5,8 @@ import threading
 import os
 
 class LogicData:
+    """Classe contenente le variabili di stato principali dell'applicazione.
+    """
     def __init__(self) -> None:
 
         ### lock per sincronizzare gli accessi alle risorse ###
@@ -66,12 +68,21 @@ class AbstractContainer:
         self.threads = []
     
     def add(self, thread, lock = None) -> None:
+        """Aggiunge un thread alla lista di thread del container.
+
+        :param thread: il thread da inserire.
+        :param lock: parametro aggiunto per retrocompatibilità.
+        """
         with self.lock:
             self.threads.append(thread)
             self.drawSingle(thread, lock)
             self.postAdd(thread, lock)
 
     def remove(self, threadObject) -> None:
+        """Rimuove un thread dalla lista di thread del container.
+
+        :param threadObject: il thread da rimuovere.
+        """
         with self.lock:
             if self.removeCondition(threadObject):
                 for thread in self.threads:
@@ -81,14 +92,27 @@ class AbstractContainer:
 
     #TODO: definire se sia necessario il lock sul redraw
     def redrawAll(self) -> None:
+        """Ridisegna tutti i thread seguendo le indicazioni dell'implementazione concreta.
+        """
         for thread in self.threads:
             self.redrawSingle(thread)
 
     #TODO: definire se sia necessario il lock sul redraw
     def drawSingle(self, thread, lock = None) -> None:
+        """Ridisegna il singolo thread.
+
+        :param thread: il thread da ridisegnare.
+        :param lock: aggiunto per retrocompatibilità.
+        """
         self.redrawSingle(thread)
 
     def removeCondition(self, obj) -> bool:
+        """Metodo che definisce la condizione logica per poter rimuovere il thread.
+
+        :param obj: il thread da testare contro la condizione.
+
+        :returns: se non re-implementato, default a True (pass-through).
+        """
         return True
 
     @abstractmethod
@@ -100,11 +124,17 @@ class AbstractContainer:
         pass
 
     def postAdd(self, thread, lock) -> None:
+        """Handle per implementare operazioni aggiuntive in seguito all'aggiunta di un thread.
+        Necessario per garantire la sincronizzazione con le operazioni di add precedenti.
+
+        :param thread: thread appena aggiunto.
+        :param lock: aggiunto per retrocompatibilità.
+        """
         return
 
 class LogicThreadInterface(threading.Thread):
     """
-    Wrapper della classe Thread
+    Interfaccia logica della classe Thread. Necessario per aggiungere un handle logico per terminare i threads aperti.
     """
 
     def __init__(self, group = None, target = None, name = None, args = (), kwargs = {}, *, daemon = True):
@@ -114,4 +144,6 @@ class LogicThreadInterface(threading.Thread):
         super().__init__(group = group, target = target, name = name, args = args, kwargs = kwargs, daemon = daemon)
     
     def exit(self):
+        """Forza l'uscita del thread, interrompendone l'esecuzione.
+        """
         os._exit(0)

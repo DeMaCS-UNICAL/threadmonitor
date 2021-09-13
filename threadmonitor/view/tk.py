@@ -30,6 +30,8 @@ def getPhotoImage(resourceName: str, resizeParams: Tuple[int, int], master) -> I
 
 
 class AbstractTkContainer(model.AbstractContainer):
+    """Astrazione di una struttura dati contenente liste di threads, dotata di una rappresentazione grafica nella GUI del sistema.
+    """
     
     def __init__(self, container: Canvas, image: PhotoImage, baseWidth, baseHeight) -> None:
         super().__init__()
@@ -41,6 +43,8 @@ class AbstractTkContainer(model.AbstractContainer):
 
 
 class ConditionContainer(AbstractTkContainer):
+    """Container associato ad una particolare condition.
+    """
     
     def __init__( self, conditionContainer: Canvas, image: PhotoImage, containerHeight, imageComputerHeight, imageComputerWidth, semCanvas, conditionLabel, semGreenCanvas ):
         super().__init__(conditionContainer, image, 20, 0)
@@ -87,6 +91,8 @@ class ConditionContainer(AbstractTkContainer):
 
 
 class InactiveContainer(AbstractTkContainer):
+    """Container associato ai thread idle.
+    """
     
     def __init__(self, inactiveContainer: Canvas, image: PhotoImage):
         super().__init__(inactiveContainer, image, 0, 30)
@@ -127,6 +133,8 @@ class InactiveContainer(AbstractTkContainer):
 
 
 class WaitContainer(AbstractTkContainer):
+    """Container associato ai thread in wait su un determinato lock.
+    """
     
     def __init__(self, wait_container: Canvas, image, imageHeight ):
         super().__init__(wait_container, image, 0, 0)
@@ -165,6 +173,9 @@ class WaitContainer(AbstractTkContainer):
 
 
 class TkView:
+    """Manager grafico per Tk/Tcl; inizializza le variabili generali, la finestra principale,
+    e si occupa di orchestrare il corretto funzionamento delle varie componenti.
+    """
 
     FINISH = False
     DESTRA = 1
@@ -268,22 +279,16 @@ class TkView:
         self.inactiveData = InactiveContainer( self.inactiveCanvas, self.computerImage )
 
     def play(self):
-        #print(f'starting play button')
         self.stopButton.configure( state = 'normal' )
         self.nextStepButton.configure( state = 'disabled' )
         self.primaryCanvas.configure( background = '#A0A0A0' )
-        #print(f'play button view-side complete: sending playBack signal')
         GeneralBroker().send(key='playBack')
-        #print(f'playSignal complete?!?!?!?')
 
     def stop(self):
-        #print(f'starting stop button')
         self.playButton.configure( state = 'normal' )
         self.nextStepButton.configure( state = 'normal' )
         self.primaryCanvas.configure( background = '#696969' )
-        #print(f'stop button view-side complete: sending stopBack signal')
         GeneralBroker().send(key='stopBack')
-        #print(f'stopSignal complete?!?!?!?')
 
     def next_step(self):
         GeneralBroker().send(key='next_stepBack')
@@ -369,7 +374,6 @@ class TkView:
         semGreenCanvas.create_image( 45, 10, image = self.greenSem, tag = "greenSem", anchor = 'center' )
         semGreenCanvas.create_image( 45, 10, image = self.greySem, tag = "greyGreenSem", anchor = 'center' )
         semGreenCanvas.create_text( 15, 12, text = "ALL" )
-
 
         conditionLabel = Label( conditionContainer, text = 'Condition '+condition.name )
         conditionLabel.place( relx = 0.5, rely = 0.70, anchor = 'c' )
@@ -566,9 +570,7 @@ class TkView:
         val_x = int( self.primaryCanvas.winfo_width()/2 )
         anchor_param = 'n'
 
-        #pdb.set_trace()
         self.primaryCanvas.create_text( val_x, (105/100)*self.imageComputerHeight, text = thread.getName(), tag = tag_param, anchor = anchor_param )
-        #pdb.set_trace()
         self.primaryCanvas.create_image( val_x, 0, image = self.computerImage, tag = f"image{ str(thread.ident) }", anchor = anchor_param )
 
         wait_data = container_data[1]  
@@ -693,8 +695,6 @@ class SingletonTkView(TkView):
 
 def setup() -> TkView:
 
-    #print(f'attempiting to set up callbacks')
-
     GeneralBroker().registerCallback('start', SingletonTkView().start)
     GeneralBroker().registerCallback('mainloop', SingletonTkView().mainloop)
 
@@ -712,7 +712,5 @@ def setup() -> TkView:
     ConditionBroker().registerCallback('add', SingletonTkView().newCondition)
     ConditionBroker().registerCallback('notifyLock', SingletonTkView().notifyLock)
     ConditionBroker().registerCallback('setConditionName', SingletonTkView().setConditionName)
-
-    #print('callbacks set')
 
     return SingletonTkView()
