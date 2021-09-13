@@ -80,7 +80,7 @@ conda install -c conda-forge --file requirements.txt
 ---
 ### Update documentation
 
-Please, comment line 8 at __init__.py in the view module before updating.
+Please, comment the call to view_init in the __init__.py of the root module before updating.
 Comment it out when done to ensure the code works.
 
 ```shell
