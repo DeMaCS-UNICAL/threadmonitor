@@ -96,10 +96,11 @@ class Filosofo(Thread):
         
     def mangia(self):
 
-        #self.t.prendiMangiaESmetti(self.posizione)
+        
         print(f"Il filosofo {self.getName()} vuole mangiare.")
         
         # Acquire di entrambe le bacchette
+        #self.t.prendiMangiaESmetti(self.posizione)
         self.t.prendiLockSimultaneo(self.posizione)
         print(f"Il filosofo {self.getName()} ha le sue bacchette e mangia.")
         

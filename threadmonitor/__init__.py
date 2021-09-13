@@ -13,11 +13,10 @@ COME INTEGRARLO
 from . import controller
 from . import view
 
-#view.view_init()
+view.view_init()
 
 def startGraph():
     """
     Inizializza le varie componenti del sistema, avviando il debugger grafico.
     """
-    #print('proceeding to initialize Controller')
     controller.SingletonController().start()
