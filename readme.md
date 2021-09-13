@@ -42,9 +42,6 @@ if __name__ == "__main__":
 
     threadmonitor.startGraph()
 
-    for t in threads:
-        t.join()
-
 ```
 ## Instructions
 ---
