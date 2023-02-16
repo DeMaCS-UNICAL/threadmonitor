@@ -1,0 +1,14 @@
+*/__pycache__
+*/__pycache__/
+*/__pycache__/*
+__pycache__/
+.vscode/
+*/.vscode/
+appunti.txt
+./.idea/
+.idea/
+*next_commit*
+pat
+docs/_build/
+docs/_build/*
+logs/log*

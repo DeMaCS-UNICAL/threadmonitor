@@ -1,64 +1,102 @@
-Library made by Guido Scarlato.
+Library originally made by Guido Scarlato, forked by Davide Caligiuri.
 
 # GraphThreading
 
-![](application.PNG)
+![](resource/application.PNG)
 
 ### Example
 ``` python 
-from graphthreading import Controller,GraphLock,GraphThread,GraphCondition
-import graphthreading
-
+# to obtain a perfectly valid multithreading code, replace with:
+# from threading import Lock, Thread, Condition
+from threadmonitor.wrapper.threading import Lock, Thread, Condition
+import threadmonitor
 
 class Structure:
     def __init__(self):
-        self.lock = GraphLock()
-        self.condition = GraphCondition(self.lock)
-        self.lock.setName('lockName')
+        self.lock = Lock()
+        self.condition = Condition(self.lock)
     
     def get(self):
         self.lock.acquire()
         self.lock.release()
 
-class MyThread(GraphThread):
+class MyThread(Thread):
     def __init__(self,structure):
         super().__init__()
-        self.structure=structure
+        self.structure = structure
 
     def run(self):
         while True:
             self.structure.get()
-            
-structure = Structure()
-threads = []
 
-for i in range(4):
-    t = MyThread(structure)
-    threads.append(t)
+if __name__ == "__main__":            
+    structure = Structure()
+    threads = []
 
-for t in threads:
-    t.start()
+    for i in range(4):
+        t = MyThread(structure)
+        threads.append(t)
 
-graphthreading.startGraph()
+    for t in threads:
+        t.start()
+
+    threadmonitor.startGraph()
+
 ```
-
+## Instructions
 ---
 ### Clone
 
-- Clone this repo to your local machine using `https://github.com/guidoscarl/threadmonitor.git`
+- Clone this repo to your local machine using `https://github.com/Dygwah98/threadmonitor`
 ---
 ### Setup
 
-> install python packages
+> using pipenv (recommended):
 
 ```shell
 sudo apt-get install python3-tk
-pip3 install Pillow 
+pipenv install
 ```
 
+> using pip:
+
+```shell
+sudo apt-get install python3-tk
+pip3 install -r requirements.txt 
+```
+
+> using conda:
+
+```shell
+sudo apt-get install python3-tk
+conda create --name p39 python=3.9
+conda activate p39
+conda install -c conda-forge --file requirements.txt
+```
 
 ---
+### Update documentation
 
+Please, comment the call to view_init in the __init__.py of the root module before updating.
+Comment it out when done to ensure the code works.
+
+```shell
+cd docs
+make clean
+make [html | epub | latex | ...] 
+```
+For more, refer to the [Sphinx documentation](https://www.sphinx-doc.org/en/master/man/sphinx-build.html).
+
+---
+### Execute tests
+
+```shell
+# [testname] must be a suitable source file in the tests directory
+# OMIT the .py at the end
+python -m tests.[testname]
+```
+
+---
 ## Features
 > Graphic representation of the components
 
@@ -66,6 +104,4 @@ pip3 install Pillow
 
 > Excecution step by step 
 
-
-
-
+> Seamless integration with the existing threading module
