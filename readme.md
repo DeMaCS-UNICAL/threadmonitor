@@ -93,7 +93,7 @@ For more, refer to the [Sphinx documentation](https://www.sphinx-doc.org/en/mast
 ```shell
 # [testname] must be a suitable source file in the tests directory
 # OMIT the .py at the end
-py -m tests.[testname]
+python -m tests.[testname]
 ```
 
 ---
