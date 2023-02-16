@@ -65,7 +65,7 @@ sudo apt-get install python3-tk
 pip3 install -r requirements.txt 
 ```
 
-> using condo:
+> using conda:
 
 ```shell
 sudo apt-get install python3-tk
