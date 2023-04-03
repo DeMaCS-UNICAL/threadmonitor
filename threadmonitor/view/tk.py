@@ -3,6 +3,7 @@
 from functools import partial
 from threadmonitor.model.events import ConditionBroker, GeneralBroker, LockBroker, ThreadBroker
 from tkinter import ttk
+#import tkinter.tix as tix
 from tkinter import * 
 from typing import Tuple
 from PIL import ImageTk
@@ -189,12 +190,14 @@ class TkView:
         self.modelData = model.SingletonLogic()
 
         self.window = Tk()
-        self.window.title( 'graphthreading' )
-
-        self.screen_width = self.window.winfo_screenwidth()
-        self.screen_heigth = self.window.winfo_screenheight()
+        self.window.title( 'Graph Threading' )
+        #primaryMonitor = tix.Monitor(root)
+        #self.screen_width = primaryMonitor.width//2
+        #self.screen_height = primaryMonitor.height//2
+        self.screen_width = self.window.winfo_screenwidth()//2
+        self.screen_height = self.window.winfo_screenheight()//2
         self.pad = 3
-        self.window.geometry( '{0}x{1}'.format( self.screen_width-self.pad, self.screen_heigth-self.pad ) )
+        self.window.geometry( '{0}x{1}'.format( self.screen_width-self.pad, self.screen_height-self.pad ) )
 
         ### PUNTI DI PARTENZA DEI CONTAINERS ###
         self.currentOrientPosition = 0
@@ -227,7 +230,7 @@ class TkView:
         
         ### Inizializzazione primaryCanvas ###
 
-        self.frame = Frame( self.window, width = self.screen_width, height = self.screen_heigth, background = 'grey' )
+        self.frame = Frame( self.window, width = self.screen_width, height = self.screen_height, background = 'grey' )
         self.frame.pack( fill = BOTH, expand = True )
 
         self.primaryCanvas = Canvas( self.frame, background = '#A0A0A0', highlightthickness = 0, highlightbackground = "black", height = 10000, width = self.screen_width )
