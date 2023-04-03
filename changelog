@@ -1,0 +1,128 @@
+Changelog:
+
+2021/08/06 
+- in _StopAndPlay.run(), shared access to controller.isStopped and controller.step was not protected with locks.
+  SOLVED by creating the method Controller.checkIfStopped(checkStepsToo : bool) and changing the _StopAndPlay.run() method slightly
+- for every instance of the wrapper Lock class, a _StopAndPlay instance is created; this creates unnecessary overhead since they're supposed to be all synchronized
+  SOLVED by creating a global instance of the class and making every Lock refer to it
+- the animation for the Condition class is bugged and needs to be reworked
+- the ConditionTest too, is weirdly designed and could be improved
+- the update of isStopped via button clicking is still unsynchronized, may need some work
+- occasional crashes on stressTest, still need to identify the cause
+
+2021/08/11
+- integrated Sphinx for docs autogeneration:
+	- added Sphinx to pipenv dependencies
+	- created docs folder with minimal configuration
+	- added a few docstring to the existing code to test if the integration is working
+  KNOWN ISSUES: 
+	- the HTML page is kinda lacking, might need some work
+	- sensible to structural changes	
+	- still needs testing for different formats (epub, pdf ...)
+- renamed the effective module folder from tm_graph to threadmonitor
+- added the getResourceFromName() method in the graph_view.py file
+- moved _StopAndPlay hierarchy from threading.py to utils.py
+- renamed graph_view.py to controllers.py
+- added requirements.txt
+- added test subdirectory and moved *Test.py there
+
+2021/08/13
+- renamed threadmonitor.view.graph_view to threadmonitor.view.tk
+
+2021/08/15
+- created model submodule
+- updated docs to reflect project changes
+
+2021/08/20
+- fixed some problems with test execution
+- added the correct method for executing tests in the readme
+- (W.I.P.) started implementing some helper functions to reduce boilerplate code in tk.py
+  KNOWN ISSUES: too many different params to handle singularly, probably needs variable unpacking?
+
+2021/08/21
+- implemented getPhotoImage in tk.py (completed W.I.P. 2021/08/20)
+- completed implementing createAndEmplaceButton in tk.py (completed W.I.P. 2021/08/20)
+
+2021/08/23
+- created controller submodule and updated docs accordingly
+- (W.I.P.) created AbstractContainer in tk.py to generalize: ConditionContainer, _InactiveContainer, _WaitContainer
+- KNOWN ISSUES 
+    - found dependency between view submodule and wrapper submodule in _InactiveContainer.drawNewThread()
+    - the wrapper.threading.Lock.releaseLock (used in drawNewThread) seems to affect the distribution of threads across locks
+- created utils submodule and updated docs accordingly
+- minimal changes to ease syntax on imports
+- updated readme.md
+- renamed _InactiveContainer to InactiveContainer
+- renamed _WaitContainer to InactiveContainer
+
+2021/08/24
+- made AbstractContainer base class for WaitContainer, InactiveContainer, ConditionContainer
+- implemented SingletonController to replace the global controller, stepLock and stepCondition variables
+- implemented controller.run() and made _StopAndPlay.run() a wrapper of the former
+- moved startGraph() the the root module __init__.py file
+- KNOWN ISSUES: mandatory synchronization of the addLock/addThread/addCondition methods to allow object to be added at runtime, rather than before calling startGraph()
+
+2021/08/25
+- implemented _InactiveContainer, Logic classes in model package
+- moved AbstractContainer from tk.py to model package and implemented AbstractTkContainer
+- updated Controller to move most of the logic in the model package
+- KNOWN ISSUES
+    - the Controller package still calls directly the view package
+    - the startGraph method is still mandatory
+    - the interaction between view and model still needs to be fleshed out
+- repaired broken StopAndPlay implementation and integrated it with the existing Controller
+- cleaned up classes with direct references to StopAndPlay: now only the Controller calls it, as a utility class
+- updated StopAndPlay to require a Controller param in initialization to enforce the dependency between the two classes
+- removed SingletonStopAndPlay
+
+2021/08/26
+- created events.py
+- (W.I.P.) created a basic event handling system (classes Event, EventHandler, and the respective subclasses)
+
+2021/08/27
+- (W.I.P.) implemented TkView in tk.py
+- implemented setup system for views in view.__init__.py
+- reworked event system, now it's more Publish-Subscribe like
+- renamed Event to Topic
+- renamed EventHandler to Broker
+- created SingletonTkView
+- KNOWN ISSUES: second screen not working
+
+2021/08/28
+- reworked startGraph in library init and view_init in view module init
+- changed sendMessage to send and sendAndRecieve to handle different scenarios
+- Broker.send and Broker.sendAndRecieve register the publishing topics by default
+- Broker.send and Broker.sendAndRecieve wait for at least one callback to be registered to the topic before firing
+- changed Topic to handle callback return values
+- Broker.registerCallback register the subscribed topics by default
+- Controller and TkView are now totally separated
+- KNOWN ISSUES: still not working as intended
+
+2021/08/30
+- eliminated 'init', 'update' and 'destroy' topics, now TkView initialization callbacks are static
+- fixed GUI crashing: apparently it's based on a callback interaction between Controller and TkView
+- created LogicalThreadInterface in model.py to offer a way to the view to kill threads upon closing
+- KNOWN ISSUES: circular import?
+
+2021/09/04
+- found and fixed the source of most KNOWN ISSUES: Broker-Topic concurrency scheme causing starvation
+- various fix to typos and such
+- removed synchronization from Controller methods due to Broker and StopAndPlay role
+- KNOWN ISSUES: occasional crashing on stressTest
+- cleaned up readme.md
+- renamed sendAndRecieve to sendAndReceive
+- created logging.py for demonstration purposes
+- KNOWN ISSUES: needs a way to distinguish a specific function return value when using sendAndReceive
+
+2021/09/06
+- implemented logging system for demonstration purposes
+- created log folder to keep logs generated by the new logging system
+
+2021/09/10
+- removed StopAndPlay and moved its functionalities into Controller
+- added docstring for minimal documentation
+- added new tests for an eventual demo
+- various fixes and typos
+
+2021/09/13
+- completed documentation
