@@ -1,4 +1,4 @@
-Library originally made by Guido Scarlato, forked by Davide Caligiuri.
+Library originally made by Guido Scarlato, forked by Davide Caligiuri. Supervisor: Prof. Giovambattista Ianni
 
 # GraphThreading
 
@@ -90,7 +90,10 @@ For more, refer to the [Sphinx documentation](https://www.sphinx-doc.org/en/mast
 ---
 ### Execute tests
 
+If using pipenv:
+
 ```shell
+pipenv shell
 # [testname] must be a suitable source file in the tests directory
 # OMIT the .py at the end
 python -m tests.[testname]
