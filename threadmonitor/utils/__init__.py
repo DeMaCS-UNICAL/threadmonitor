@@ -4,6 +4,7 @@ Il modulo utils contiene metodi di utilità generici, non legati a nessun partic
 
 import os
 import threading
+import threadmonitor.utils.constants as constants
 
 def getResourceFromName(filename: str) -> str:
     """
@@ -13,10 +14,14 @@ def getResourceFromName(filename: str) -> str:
 
     :returns: il path del file cercato.
     """
+    print(f"Looking for {filename} in {os.getcwd()}")
+    return os.path.join(constants.RESOURCESFILEPATH, filename)
+    '''
     for r,d,f in os.walk(".."):
         for files in f:
             if files == filename:
                 return os.path.join(r,files)
+                '''
 
 def singleton(class_):
     """Annotazione (detta anche decorator) custom.
